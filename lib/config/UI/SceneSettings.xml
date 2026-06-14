@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scene-settings>
+    <table-detail>
+        <table-image></table-image>
+        <table-size>
+            <width-multiplier>1.45</width-multiplier>
+            <height-multiplier>0.115</height-multiplier>
+        </table-size>
+        <table-position>
+            <bottom-margin>0.01</bottom-margin>
+        </table-position>
+        <text>
+            <wrapping-width-multiplier>0.65</wrapping-width-multiplier>
+            <dialog-font-size-multiplier>0.025</dialog-font-size-multiplier>
+            <name-font-size-multiplier>0.030</name-font-size-multiplier>
+            <text-padding-top>0.03</text-padding-top>
+            <text-padding-left>0.09</text-padding-left>
+            <text-content-width>0.60</text-content-width>
+        </text>
+        <gradient-panel>
+            <use-gradient>true</use-gradient>
+            <height-multiplier>0.30</height-multiplier>
+            <color-start>rgba(45, 30, 20, 0.0)</color-start>
+            <color-end>rgba(35, 22, 14, 0.95)</color-end>
+        </gradient-panel>
+        <buttons>
+            <spacing-multiplier>0.01</spacing-multiplier>
+            <padding-multiplier>0.015</padding-multiplier>
+            <width-multiplier>0.10</width-multiplier>
+            <height-multiplier>0.05</height-multiplier>
+            <font-size-multiplier>0.015</font-size-multiplier>
+            <menu-bottom-margin>0.027</menu-bottom-margin>
+        </buttons>
+    </table-detail>
+    <dialog-choices>
+        <!-- Позиция панели: доля экрана (0.0=лево/верх, 0.5=центр, 1.0=право/низ) -->
+        <x-position>0.75</x-position>
+        <y-position>0.60</y-position>
+        <!-- Ширина панели (доля ширины экрана) -->
+        <width-multiplier>0.30</width-multiplier>
+        <!-- Расстояние между кнопками -->
+        <spacing>8</spacing>
+        <!-- Размер шрифта (доля высоты экрана) -->
+        <font-size-multiplier>0.020</font-size-multiplier>
+        <!-- Высота одной кнопки (доля высоты экрана) -->
+        <button-height-multiplier>0.055</button-height-multiplier>
+    </dialog-choices>
+    <scene-selection>
+        <scroll-pane>
+            <max-height-multiplier>0.4</max-height-multiplier>
+        </scroll-pane>
+    </scene-selection>
+</scene-settings>

@@ -1,0 +1,96 @@
+/* ── Кнопки (кофейная палитра) ── */
+.game-button {
+    -fx-font-family: "Verdana", "Arial", sans-serif;
+    -fx-text-fill: #faf0e6;
+    -fx-padding: 6 12;
+    -fx-alignment: center;
+    -fx-background-color: linear-gradient(to bottom, #4a3228 0%, #6b4a3a 50%, #4a3228 100%);
+    -fx-border-width: 1px;
+    -fx-border-color: rgba(210, 170, 120, 0.5);
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-cursor: hand;
+}
+.game-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #6b4a3a 0%, #8b6a52 50%, #6b4a3a 100%);
+    -fx-border-color: rgba(230, 190, 140, 0.7);
+}
+
+/* ── Панель меню ── */
+.hitech-panel {
+    -fx-background-color: rgba(40, 25, 18, 0.75);
+    -fx-background-radius: 12px;
+    -fx-border-color: rgba(180, 140, 100, 0.4);
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+}
+
+/* ── Заголовок панели ── */
+.hitech-panel-title {
+    -fx-font-family: "Verdana", "Arial", sans-serif;
+    -fx-text-fill: #e8d5c0;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 3, 0.5, 1, 1);
+}
+
+/* ── Текст диалога ── */
+.dialog-text {
+    -fx-font-family: "Verdana", "Arial", sans-serif;
+    -fx-font-weight: bold;
+    -fx-fill: white;
+    -fx-effect: dropshadow(two-pass-box, black, 2, 1.0, 1, 1);
+}
+/* ── Кнопки выбора в диалоге ── */
+.choice-button {
+    -fx-font-family: "Verdana", "Arial", sans-serif;
+    -fx-text-fill: #f0e8dc;
+    -fx-alignment: center-left;
+    -fx-padding: 10 30 10 20;
+    -fx-background-color: linear-gradient(to right, rgba(30, 18, 12, 0.85), rgba(30, 18, 12, 0.0));
+    -fx-background-radius: 8 0 0 8;
+    -fx-border-color: rgba(180, 140, 100, 0.45) transparent rgba(180, 140, 100, 0.45) rgba(180, 140, 100, 0.45);
+    -fx-border-width: 1 0 1 1;
+    -fx-border-radius: 8 0 0 8;
+    -fx-cursor: hand;
+}
+.choice-button:hover {
+    -fx-background-color: linear-gradient(to right, rgba(80, 50, 35, 0.92), rgba(80, 50, 35, 0.0));
+    -fx-border-color: rgba(230, 190, 140, 0.8) transparent rgba(230, 190, 140, 0.8) rgba(230, 190, 140, 0.8);
+}
+
+.speaker-name {
+    -fx-font-family: "Verdana", "Arial", sans-serif;
+    -fx-font-weight: bold;
+    -fx-fill: #ffcc00;
+    -fx-effect: dropshadow(gaussian, black, 2, 1.0, 1, 1);
+}
+
+/* ── Подсказки горячих клавиш ── */
+.hotkey-key {
+    -fx-font-family: "Verdana", "Arial", sans-serif;
+    -fx-font-weight: bold;
+    -fx-fill: rgba(255, 255, 255, 0.7);
+}
+.hotkey-label {
+    -fx-font-family: "Verdana", "Arial", sans-serif;
+    -fx-fill: rgba(255, 255, 255, 0.45);
+}
+
+/* ── Навигационные стрелки (◀ ▶) ── */
+.nav-arrow-button {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-background-color: rgba(30, 18, 12, 0.5);
+    -fx-background-radius: 50;
+    -fx-border-color: rgba(180, 140, 100, 0.3);
+    -fx-border-width: 1;
+    -fx-border-radius: 50;
+    -fx-cursor: hand;
+    -fx-padding: 4 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 3, 0.3, 0, 1);
+}
+.nav-arrow-button:hover {
+    -fx-text-fill: #ffe0b2;
+    -fx-background-color: rgba(80, 50, 35, 0.75);
+    -fx-border-color: rgba(230, 190, 140, 0.6);
+}

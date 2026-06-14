@@ -1,0 +1,66 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Compiled class files
+bin/
+*.class
+
+# Eclipse
+.metadata/
+*.project
+*.classpath
+.settings/
+build/
+.factorypath
+
+E:\gameEclipse\.metadata
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Save files (game saves)
+save/*.ser
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Manual archives (слишком большие для гита)
+*.rar
+*.zip
+*.7z
+
+# Game content (сюжет и ассеты) — хранится локально, не в репозитории
+lib/Scene/
+lib/person/
+lib/sound/
+lib/config/Chapters.xml
+
+# Internal docs (не для репозитория)
+docs/
+doc/
+
+

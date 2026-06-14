@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui-config>
+    <defaults>
+        <sound-hover>hover</sound-hover>
+        <sound-click>click</sound-click>
+        <style-class>game-button</style-class>
+    </defaults>
+    <button id="menu-btn-continue"  context="main-menu" text="Продолжить"/>
+    <button id="menu-btn-start"     context="main-menu" text="Начать новеллу"/>
+    <button id="menu-btn-new-game"  context="main-menu" text="Начать новую игру"/>
+    <button id="menu-btn-settings"  context="main-menu" text="Настройки"/>
+    <button id="menu-btn-exit"      context="main-menu" text="Выход"/>
+    <button id="menu-btn-back"      context="submenu"   text="Назад"/>
+    <button id="game-btn-back"      context="game-panel" text="Назад"/>
+    <button id="game-btn-next"      context="game-panel" text="Далее"/>
+</ui-config>

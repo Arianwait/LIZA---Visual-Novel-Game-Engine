@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<main-menu-config>
+    <resources>
+        <background-image>file:lib/MainMenuImg/Back.png</background-image>
+        <table-image></table-image>
+        <music></music>
+    </resources>
+    <positioning>
+        <margin-right>0.7</margin-right>
+        <margin-top>0.2</margin-top>
+        <margin-left>0.05</margin-left>
+    </positioning>
+    <font>
+        <title-size-multiplier>0.03</title-size-multiplier>
+    </font>
+    <spacing>
+        <menu-padding>50.0</menu-padding>
+        <menu-spacing>10.0</menu-spacing>
+    </spacing>
+    <preload>
+        <timeout-ms>5000</timeout-ms>
+        <check-interval-ms>50</check-interval-ms>
+    </preload>
+    <title>
+        <text>Project Mira</text>
+        <color>brown</color>
+        <weight>bold</weight>
+    </title>
+</main-menu-config>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+
+<fx:root type="StackPane" xmlns:fx="http://javafx.com/fxml/1"
+         pickOnBounds="true">
+
+    <!-- Затемнение фона -->
+    <StackPane fx:id="dimBackground" style="-fx-background-color: rgba(0,0,0,0.5);"/>
+
+    <!-- Панель меню -->
+    <VBox fx:id="menuPanel" alignment="CENTER" spacing="15"
+          styleClass="hitech-panel">
+        <padding>
+            <Insets top="25" right="30" bottom="25" left="30"/>
+        </padding>
+        <children>
+            <Text fx:id="titleText" text="Меню" styleClass="hitech-panel-title"/>
+            <VBox fx:id="buttonsBox" spacing="8" alignment="CENTER"/>
+        </children>
+    </VBox>
+</fx:root>

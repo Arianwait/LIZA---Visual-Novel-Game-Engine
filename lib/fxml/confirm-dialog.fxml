@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+
+<fx:root type="StackPane" xmlns:fx="http://javafx.com/fxml/1"
+         styleClass="hitech-panel">
+
+    <children>
+        <ImageView fx:id="backgroundImage" preserveRatio="false"/>
+        <VBox fx:id="contentBox" alignment="CENTER" spacing="20">
+            <padding>
+                <Insets top="30" right="30" bottom="30" left="30"/>
+            </padding>
+            <children>
+                <Text fx:id="messageText" textAlignment="CENTER"
+                      fill="WHITE"/>
+                <HBox fx:id="buttonBox" alignment="CENTER" spacing="20">
+                    <children>
+                        <Button fx:id="yesButton" text="Да"/>
+                        <Button fx:id="noButton" text="Нет"/>
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </children>
+</fx:root>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<fx:root type="StackPane" xmlns:fx="http://javafx.com/fxml/1"
+         pickOnBounds="false">
+
+    <children>
+        <VBox fx:id="buttonsContainer" pickOnBounds="false"/>
+    </children>
+</fx:root>

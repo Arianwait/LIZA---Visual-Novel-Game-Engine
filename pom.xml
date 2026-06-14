@@ -1,0 +1,154 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>kz.aws.game_main</groupId>
+	<artifactId>kz.aws.game_main</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+		<maven.compiler.source>21</maven.compiler.source>
+		<maven.compiler.target>21</maven.compiler.target>
+
+		<javafx.version>21.0.5</javafx.version>
+		<main.class>kz.aws.game.dispetcher.GameDispetcher</main.class>
+	</properties>
+
+	<dependencies>
+		<!-- JavaFX Controls -->
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-controls</artifactId>
+			<version>${javafx.version}</version>
+		</dependency>
+
+		<!-- JavaFX FXML -->
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-fxml</artifactId>
+			<version>${javafx.version}</version>
+		</dependency>
+
+		<!-- JSON -->
+		<dependency>
+			<groupId>com.github.cliftonlabs</groupId>
+			<artifactId>json-simple</artifactId>
+			<version>2.1.2</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<!-- JavaFX Media -->
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-media</artifactId>
+			<version>${javafx.version}</version>
+		</dependency>
+
+		<!-- Reflections: автопоиск классов по аннотациям в пакете (для ButtonActionRegistry) -->
+		<dependency>
+			<groupId>org.reflections</groupId>
+			<artifactId>reflections</artifactId>
+			<version>0.10.2</version>
+		</dependency>
+
+		<!-- SLF4J binding: убирает предупреждение "Failed to load StaticLoggerBinder" (reflections тянет slf4j-api 1.7) -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>1.7.36</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<!-- Компилятор Java -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.11.0</version>
+				<configuration>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
+				</configuration>
+			</plugin>
+
+			<!-- Плагин JavaFX для запуска из Maven/Eclipse (goal: javafx:run) -->
+			<plugin>
+				<groupId>org.openjfx</groupId>
+				<artifactId>javafx-maven-plugin</artifactId>
+				<version>0.0.8</version>
+				<configuration>
+					<mainClass>${main.class}</mainClass>
+					<!-- Убирает WARNING про native method в javafx.media -->
+					<jvmArgs>
+						<arg>--enable-native-access=javafx.media</arg>
+					</jvmArgs>
+				</configuration>
+			</plugin>
+
+			<!-- Делаем "толстый" jar со всеми зависимостями -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.6.0</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>${main.class}</mainClass>
+						</manifest>
+					</archive>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- Launch4j: из jar делаем .exe -->
+			<plugin>
+				<groupId>com.akathist.maven.plugins.launch4j</groupId>
+				<artifactId>launch4j-maven-plugin</artifactId>
+				<version>2.5.3</version> <!-- или 2.7.0, если хочешь самый
+				последний -->
+				<executions>
+					<execution>
+						<id>l4j-clui</id>
+						<phase>package</phase>
+						<goals>
+							<goal>launch4j</goal>
+						</goals>
+						<configuration>
+							<outfile>${project.build.directory}/AwsGame.exe</outfile>
+
+							<jar>
+								${project.build.directory}/${project.artifactId}-${project.version}-jar-with-dependencies.jar</jar>
+
+							<headerType>gui</headerType>
+							<errTitle>Aws Game Error</errTitle>
+
+							<jre>
+								<path>jre</path>
+								<minVersion>17.0.0</minVersion>
+								<bundledJre64Bit>true</bundledJre64Bit>
+								<jdkPreference>preferJre</jdkPreference>
+							</jre>
+							<!-- при желании можно раскомментировать -->
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>

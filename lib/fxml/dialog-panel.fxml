@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.text.TextFlow?>
+<?import javafx.scene.image.ImageView?>
+
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="kz.aws.game.scenedetails.DialogPanelController"
+           fx:id="rootPane"
+           pickOnBounds="false">
+
+    <!-- Контейнер панели (анимируется slide up/down), прижат к низу -->
+    <StackPane fx:id="container" StackPane.alignment="BOTTOM_CENTER">
+
+        <!-- Панель (фон: градиент или картинка) -->
+        <StackPane fx:id="tablePane">
+
+            <!-- Картинка фона (режим картинки, скрыта в режиме градиента) -->
+            <ImageView fx:id="backgroundImageView"
+                       smooth="true"
+                       preserveRatio="false"
+                       visible="false"/>
+
+            <!-- Контент: текст сверху, навигация + подсказки снизу -->
+            <VBox fx:id="contentStack">
+
+                <!-- Текстовый блок -->
+                <VBox fx:id="textContainer" spacing="5"
+                      alignment="TOP_LEFT"
+                      VBox.vgrow="ALWAYS">
+                    <Text fx:id="nameText"
+                          styleClass="speaker-name"/>
+                    <Text fx:id="dialogueText"
+                          styleClass="dialog-text"/>
+                    <TextFlow fx:id="dialogueTextFlow"
+                              styleClass="dialog-text"
+                              visible="false"
+                              managed="false"/>
+                </VBox>
+
+                <!-- Нижняя полоска: подсказки слева, навигация справа -->
+                <HBox fx:id="bottomBar" alignment="CENTER">
+                    <!-- Подсказки горячих клавиш -->
+                    <VBox fx:id="hotkeyHints" alignment="BOTTOM_LEFT" spacing="2"
+                          HBox.hgrow="ALWAYS">
+                        <padding>
+                            <Insets bottom="8" left="15"/>
+                        </padding>
+                    </VBox>
+                    <!-- Навигация (◀ ▶) -->
+                    <HBox fx:id="navButtons" alignment="CENTER_RIGHT" spacing="8">
+                        <padding>
+                            <Insets bottom="8" right="15"/>
+                        </padding>
+                    </HBox>
+                </HBox>
+
+            </VBox>
+        </StackPane>
+    </StackPane>
+</StackPane>

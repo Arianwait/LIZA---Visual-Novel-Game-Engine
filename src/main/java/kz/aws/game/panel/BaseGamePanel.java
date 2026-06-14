@@ -1,0 +1,93 @@
+package kz.aws.game.panel;
+
+import java.util.function.Consumer;
+
+import javafx.scene.layout.StackPane;
+import kz.aws.game.appsettings.AppSettings;
+
+/**
+ * Базовый класс для всех игровых панелей.
+ *
+ * <p>Панель — это любой интерактивный оверлей поверх сцены:
+ * доска улик, осмотр предмета, загадка, мини-игра, карта и т.д.
+ *
+ * <p>Порядок использования:
+ * <ol>
+ *   <li>Создать класс-наследник, пометить {@link GamePanel @GamePanel}.</li>
+ *   <li>Реализовать {@link #initialize()} — построить UI панели.</li>
+ *   <li>По завершению вызвать {@link #complete(PanelResult)}.</li>
+ * </ol>
+ *
+ * <p>Размер задаётся в аннотации ({@code widthPercent} / {@code heightPercent})
+ * и применяется автоматически при вызове {@link #init(PanelContext)}.
+ *
+ * <p>Пример:
+ * <pre>
+ * {@literal @}GamePanel(id = "knife_inspect", title = "Осмотр улики",
+ *            widthPercent = 55, heightPercent = 60)
+ * public class KnifeInspectPanel extends BaseGamePanel {
+ *     {@literal @}Override
+ *     protected void initialize() {
+ *         ImageView img = new ImageView(new Image("file:lib/img/knife.png"));
+ *         Button closeBtn = new Button("Закрыть");
+ *         closeBtn.setOnAction(e -&gt; complete(PanelResult.close()));
+ *         getChildren().addAll(img, closeBtn);
+ *     }
+ * }
+ * </pre>
+ */
+public abstract class BaseGamePanel extends StackPane {
+
+    private Consumer<PanelResult> onComplete;
+    private PanelContext context;
+
+    /**
+     * Инициализирует панель: задаёт размеры из аннотации и вызывает {@link #initialize()}.
+     * Вызывается системой автоматически перед показом.
+     */
+    public final void init(PanelContext context) {
+        this.context = context;
+        GamePanel annotation = getClass().getAnnotation(GamePanel.class);
+        if (annotation != null) {
+            double w = context.getWindowWidth()  * annotation.widthPercent()  / 100.0;
+            double h = context.getWindowHeight() * annotation.heightPercent() / 100.0;
+            setPrefSize(w, h);
+            setMaxSize(w, h);
+        }
+        initialize();
+    }
+
+    /**
+     * Строим UI панели здесь.
+     * Вызывается один раз после установки размеров.
+     */
+    protected abstract void initialize();
+
+    /**
+     * Завершает панель и передаёт результат движку.
+     * <ul>
+     *   <li>{@link PanelResult#success()} / {@link PanelResult#failure()} — записывают флаг, могут перейти на сцену</li>
+     *   <li>{@link PanelResult#withData(boolean, String)} — то же + строковые данные в {@code playerChoices}</li>
+     *   <li>{@link PanelResult#close()} — просто закрыть панель, ничего не записывать</li>
+     * </ul>
+     */
+    protected final void complete(PanelResult result) {
+        if (onComplete != null) onComplete.accept(result);
+    }
+
+    /**
+     * Досрочно завершает панель с провалом. Вызывается извне (например по Esc).
+     */
+    public void forceFailure() {
+        complete(PanelResult.failure());
+    }
+
+    /** Устанавливается движком. */
+    public void setOnComplete(Consumer<PanelResult> callback) {
+        this.onComplete = callback;
+    }
+
+    protected PanelContext  getContext()          { return context; }
+    protected AppSettings   getAppSettings()      { return context != null ? context.getAppSettings() : null; }
+    protected GamePanel     getPanelAnnotation()  { return getClass().getAnnotation(GamePanel.class); }
+}
