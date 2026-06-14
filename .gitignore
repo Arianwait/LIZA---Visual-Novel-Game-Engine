@@ -59,6 +59,9 @@ lib/person/
 lib/sound/
 lib/config/Chapters.xml
 
+# Локальная копия зависимости — Maven подтягивает её сам (см. pom.xml)
+lib/jar/
+
 # Internal docs (не для репозитория)
 docs/
 doc/
