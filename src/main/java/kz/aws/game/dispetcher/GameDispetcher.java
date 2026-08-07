@@ -20,7 +20,6 @@ import kz.aws.game.utils.VirtualViewport;
 public class GameDispetcher extends Application implements Serializable {
 
 	private static final long serialVersionUID = 8222725889624267118L;
-	private Stage primaryStage;
 
 	public static void main(String[] args) {
 		launch(args);
@@ -28,25 +27,24 @@ public class GameDispetcher extends Application implements Serializable {
 
 	/**
 	 * Инициализирует окно, вьюпорт и стартовую анимацию логотипа.
+	 * Размер окна не задаётся напрямую: Scene создаётся с размером игровой
+	 * области из настроек, а Stage сам подгоняется под неё вместе с рамкой —
+	 * так игровая область получается ровно 16:9 без полос летербокса.
 	 *
 	 * @param primaryStage основной Stage приложения
 	 */
 	@Override
 	public void start(Stage primaryStage) {
-		this.primaryStage = primaryStage;
-
 		primaryStage.getIcons().add(new Image("file:lib/Logo/logo.png"));
+		primaryStage.setTitle("Innagano");
+		primaryStage.setResizable(false);
 
 		AppSettings appSettings = JsonParser.readConfig();
-		changeResolution(appSettings);
-		primaryStage.setTitle("Innagano");
-
 		appSettings.setGamedispetcher(this);
 		appSettings.setStagePain(primaryStage);
 
 		VirtualViewport viewport = new VirtualViewport();
 		appSettings.setRoot(viewport.getContentRoot());
-		primaryStage.setFullScreen(appSettings.isFullscreen());
 
 		Scene scene = new Scene(viewport.getScreenRoot(),
 				appSettings.getWindowWidth(), appSettings.getWindowHeight());
@@ -58,23 +56,9 @@ public class GameDispetcher extends Application implements Serializable {
 		appSettings.getRoot().getChildren().add(new LogoAnimation(appSettings));
 
 		primaryStage.setScene(scene);
+		primaryStage.setFullScreen(appSettings.isFullscreen());
 		primaryStage.setFullScreenExitHint("");
 		primaryStage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
 		primaryStage.show();
-	}
-
-	public void changeResolution(AppSettings appSettings) {
-		// Здесь вы можете добавить код для изменения разрешения приложения
-		// Например, изменить размер сцены или выполнить другие действия, связанные с
-		// изменением разрешения
-		primaryStage.setFullScreen(appSettings.isFullscreen());
-		primaryStage.setWidth(appSettings.getWindowWidth());
-		primaryStage.setHeight(appSettings.getWindowHeight());
-
-	}
-
-	public void showScene(Scene scene, AppSettings appSettings) {
-		primaryStage.setScene(scene);
-		primaryStage.setFullScreen(appSettings.isFullscreen());
 	}
 }
