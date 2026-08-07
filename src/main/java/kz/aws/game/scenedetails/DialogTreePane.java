@@ -2,7 +2,6 @@ package kz.aws.game.scenedetails;
 
 import java.util.List;
 
-import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -17,6 +16,7 @@ import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.scenelist.DialogList;
 import kz.aws.game.scenelist.DialogList.DialogEntry;
 import kz.aws.game.scenelist.SceneInfo;
+import kz.aws.game.utils.VirtualViewport;
 
 /**
  * Компактная панель истории диалогов. Выезжает справа, занимает ~35% ширины экрана,
@@ -27,18 +27,16 @@ public class DialogTreePane {
     private static final int SLIDE_DURATION_MS = 400;
 
     private final VBox container;
-    private final AppSettings appSettings;
     private StackPane root;
 
     /**
      * Создаёт панель истории диалогов.
      *
-     * @param appSettings настройки приложения
+     * @param appSettings настройки приложения (не используется, сохранён для совместимости)
      * @param sceneID     id текущей сцены (не используется, сохранён для совместимости)
      * @param clicker     индекс текущего кадра (не используется, сохранён для совместимости)
      */
     public DialogTreePane(AppSettings appSettings, int sceneID, int clicker) {
-        this.appSettings = appSettings;
         this.container = new VBox(8);
         buildPanel();
     }
@@ -66,9 +64,9 @@ public class DialogTreePane {
     private Label createTitle() {
         Label title = new Label("История диалогов");
         title.getStyleClass().add("hitech-panel-title");
-        title.styleProperty().bind(Bindings.format(
+        title.setStyle(String.format(
                 "-fx-font-size: %.0fpx; -fx-font-weight: bold; -fx-text-fill: white;",
-                appSettings.getStagePain().heightProperty().multiply(0.025)));
+                VirtualViewport.height(0.025)));
         return title;
     }
 
@@ -100,8 +98,7 @@ public class DialogTreePane {
         ScrollPane scroll = new ScrollPane(dialogsBox);
         scroll.setFitToWidth(true);
         scroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
-        scroll.prefHeightProperty().bind(
-                appSettings.getStagePain().heightProperty().multiply(0.5));
+        scroll.setPrefHeight(VirtualViewport.height(0.5));
         scroll.setVvalue(1.0);
         return scroll;
     }
@@ -120,16 +117,16 @@ public class DialogTreePane {
 
         Label nameLabel = new Label(speakerName);
         nameLabel.setTextFill(nameColor);
-        nameLabel.styleProperty().bind(Bindings.format(
+        nameLabel.setStyle(String.format(
                 "-fx-font-size: %.0fpx; -fx-font-weight: bold; -fx-font-family: 'Constantia', sans-serif;",
-                appSettings.getStagePain().heightProperty().multiply(0.02)));
+                VirtualViewport.height(0.02)));
 
         Label textLabel = new Label(entry.getDialogText());
         textLabel.setTextFill(textColor);
         textLabel.setWrapText(true);
-        textLabel.styleProperty().bind(Bindings.format(
+        textLabel.setStyle(String.format(
                 "-fx-font-size: %.0fpx; -fx-font-family: 'Constantia', sans-serif;",
-                appSettings.getStagePain().heightProperty().multiply(0.016)));
+                VirtualViewport.height(0.016)));
 
         dialogsBox.getChildren().addAll(nameLabel, textLabel);
     }
@@ -156,20 +153,15 @@ public class DialogTreePane {
         this.root = root;
         StackPane.setAlignment(container, Pos.CENTER_RIGHT);
 
-        Runnable updateMargin = () -> {
-            double w = appSettings.getScene().getWidth();
-            double h = appSettings.getScene().getHeight();
-            container.setPrefWidth(w * 0.35);
-            container.setMaxWidth(w * 0.35);
-            StackPane.setMargin(container, new Insets(h * 0.05, w * 0.02, h * 0.05, 0));
-        };
-        appSettings.getScene().widthProperty().addListener((obs, o, n) -> updateMargin.run());
-        appSettings.getScene().heightProperty().addListener((obs, o, n) -> updateMargin.run());
-        updateMargin.run();
+        container.setPrefWidth(VirtualViewport.width(0.35));
+        container.setMaxWidth(VirtualViewport.width(0.35));
+        StackPane.setMargin(container, new Insets(
+                VirtualViewport.height(0.05), VirtualViewport.width(0.02),
+                VirtualViewport.height(0.05), 0));
 
         root.getChildren().add(container);
         AnimationUtils.slideInFromSide(container,
-                appSettings.getScene().getWidth(), 0, SLIDE_DURATION_MS);
+                VirtualViewport.DESIGN_WIDTH, 0, SLIDE_DURATION_MS);
         SceneInfo.disableEventHandler(root);
     }
 
@@ -178,7 +170,7 @@ public class DialogTreePane {
      */
     public void removeFromScene() {
         AnimationUtils.slideOutToSide(container, 0,
-                appSettings.getScene().getWidth(), SLIDE_DURATION_MS,
+                VirtualViewport.DESIGN_WIDTH, SLIDE_DURATION_MS,
                 () -> {
                     root.getChildren().remove(container);
                     SceneInfo.enableEventHandler(root);

@@ -28,6 +28,7 @@ import kz.aws.game.scenelist.SceneInfo;
 import kz.aws.game.soundtrack.SoundManager;
 import kz.aws.game.utils.ImageViewPool;
 import kz.aws.game.utils.VariableSubstitution;
+import kz.aws.game.utils.VirtualViewport;
 
 /**
  * Рендерит кадры сцены: фон, персонажи, overlay, текст, визуальные эффекты.
@@ -144,16 +145,6 @@ public class SceneRenderer {
         }
 
         oldRoot.getChildren().remove(sceneContentLayer);
-        sceneContentLayer.prefWidthProperty().unbind();
-        sceneContentLayer.prefHeightProperty().unbind();
-        sceneContentLayer.prefWidthProperty().bind(root.widthProperty());
-        sceneContentLayer.prefHeightProperty().bind(root.heightProperty());
-
-        backgroundView.fitWidthProperty().unbind();
-        backgroundView.fitHeightProperty().unbind();
-        backgroundView.fitWidthProperty().bind(root.widthProperty());
-        backgroundView.fitHeightProperty().bind(root.heightProperty());
-
         root.getChildren().add(0, sceneContentLayer);
     }
 
@@ -242,15 +233,14 @@ public class SceneRenderer {
             imageViewPool.release(backgroundView);
         }
 
-        sceneContentLayer = new Pane();
+        sceneContentLayer = new StackPane();
         sceneContentLayer.setPickOnBounds(false);
-        sceneContentLayer.prefWidthProperty().bind(root.widthProperty());
-        sceneContentLayer.prefHeightProperty().bind(root.heightProperty());
+        sceneContentLayer.setPrefSize(VirtualViewport.DESIGN_WIDTH, VirtualViewport.DESIGN_HEIGHT);
 
         backgroundView = imageViewPool.acquireConfigured();
         backgroundView.setPreserveRatio(false);
-        backgroundView.fitWidthProperty().bind(root.widthProperty());
-        backgroundView.fitHeightProperty().bind(root.heightProperty());
+        backgroundView.setFitWidth(VirtualViewport.DESIGN_WIDTH);
+        backgroundView.setFitHeight(VirtualViewport.DESIGN_HEIGHT);
 
         sceneContentLayer.getChildren().add(backgroundView);
         root.getChildren().add(0, sceneContentLayer);
@@ -695,7 +685,7 @@ public class SceneRenderer {
     private ImageView getOrCreateImageView(String name) {
         return characterViews.computeIfAbsent(name, k -> {
             ImageView iv = imageViewPool.acquireConfigured();
-            iv.fitHeightProperty().bind(root.heightProperty().multiply(0.8));
+            iv.setFitHeight(VirtualViewport.height(0.8));
             StackPane.setAlignment(iv, Pos.BOTTOM_CENTER);
             return iv;
         });
@@ -716,18 +706,16 @@ public class SceneRenderer {
     }
 
     /**
-     * Вычисляет X-координату для позиции персонажа (LEFT/CENTER/RIGHT).
+     * Вычисляет X-смещение персонажа от центра экрана (LEFT/CENTER/RIGHT)
+     * в дизайн-пикселях.
      *
      * @param position позиция персонажа
      * @return смещение по X в пикселях
      */
     private double calculateX(CharacterState.Position position) {
-        double width = root.getWidth();
-        if (width <= 0) width = 1280;
-
         return switch (position) {
-            case LEFT -> -width * 0.3;
-            case RIGHT -> width * 0.3;
+            case LEFT -> -VirtualViewport.width(0.3);
+            case RIGHT -> VirtualViewport.width(0.3);
             default -> 0;
         };
     }

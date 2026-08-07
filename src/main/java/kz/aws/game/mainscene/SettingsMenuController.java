@@ -3,7 +3,6 @@ package kz.aws.game.mainscene;
 import java.io.File;
 import java.net.URL;
 
-import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
@@ -20,10 +19,11 @@ import kz.aws.game.panel.Panel;
 import kz.aws.game.panel.PanelRegistry;
 import kz.aws.game.utils.UiConfigParser;
 import kz.aws.game.utils.UiFactory;
+import kz.aws.game.utils.VirtualViewport;
 
 /**
- * FXML-контроллер панели настроек. Заменяет программную сборку UI из SettingsMenu.java
- * на декларативный FXML с адаптивными биндингами для корректного масштабирования.
+ * FXML-контроллер панели настроек. Все размеры — в пикселях
+ * дизайн-разрешения {@link VirtualViewport}.
  */
 @Panel("settings")
 public class SettingsMenuController extends VBox {
@@ -71,8 +71,8 @@ public class SettingsMenuController extends VBox {
         setupFullscreenCheckBox();
         setupResolutionChoiceBox();
         setupVolumeSlider();
-        bindResponsiveFontSizes();
-        bindResponsiveMargins();
+        applyControlFontSizes();
+        applyPanelMargins();
         createActionButtons();
         createSubmenuButtons();
     }
@@ -88,12 +88,16 @@ public class SettingsMenuController extends VBox {
     }
 
     /**
-     * Заполняет список разрешений и устанавливает текущее значение.
+     * Заполняет список разрешений (только 16:9 — без полос летербокса)
+     * и устанавливает текущее значение.
      */
     private void setupResolutionChoiceBox() {
-        resolutionChoiceBox.getItems().addAll("1024x768", "1280x720", "1920x1080");
-        resolutionChoiceBox.setValue(
-                appSettings.getWindowWidth() + "x" + appSettings.getWindowHeight());
+        resolutionChoiceBox.getItems().addAll("1280x720", "1600x900", "1920x1080");
+        String current = appSettings.getWindowWidth() + "x" + appSettings.getWindowHeight();
+        if (!resolutionChoiceBox.getItems().contains(current)) {
+            current = "1280x720";
+        }
+        resolutionChoiceBox.setValue(current);
     }
 
     /**
@@ -106,28 +110,23 @@ public class SettingsMenuController extends VBox {
     }
 
     /**
-     * Привязывает размер шрифта контролов к высоте Stage через property-биндинг.
+     * Устанавливает размер шрифта контролов в дизайн-пикселях.
      */
-    private void bindResponsiveFontSizes() {
-        Stage stage = appSettings.getStagePain();
-        fullscreenCheckBox.styleProperty().bind(Bindings.format(
-                "-fx-font-size: %.0fpx;", stage.heightProperty().multiply(0.018)));
-        resolutionChoiceBox.styleProperty().bind(Bindings.format(
-                "-fx-font-size: %.0fpx;", stage.heightProperty().multiply(0.018)));
+    private void applyControlFontSizes() {
+        String fontStyle = String.format("-fx-font-size: %.0fpx;",
+                VirtualViewport.height(0.018));
+        fullscreenCheckBox.setStyle(fontStyle);
+        resolutionChoiceBox.setStyle(fontStyle);
     }
 
     /**
-     * Привязывает внешние отступы menuPanel к размерам Stage через listener.
+     * Устанавливает внешние отступы menuPanel в дизайн-пикселях.
      */
-    private void bindResponsiveMargins() {
-        Stage stage = appSettings.getStagePain();
-        Runnable updateMargin = () -> VBox.setMargin(menuPanel, new Insets(0,
-                stage.getWidth() * 0.7,
-                stage.getHeight() * 0.2,
-                stage.getWidth() * 0.05));
-        stage.widthProperty().addListener((obs, o, n) -> updateMargin.run());
-        stage.heightProperty().addListener((obs, o, n) -> updateMargin.run());
-        updateMargin.run();
+    private void applyPanelMargins() {
+        VBox.setMargin(menuPanel, new Insets(0,
+                VirtualViewport.width(0.7),
+                VirtualViewport.height(0.2),
+                VirtualViewport.width(0.05)));
     }
 
     /**
@@ -154,14 +153,15 @@ public class SettingsMenuController extends VBox {
     }
 
     /**
-     * Применяет стиль и адаптивные размеры к кнопке и добавляет в menuPanel.
+     * Применяет стиль и размеры к кнопке и добавляет в menuPanel:
+     * ширина растягивается по панели, высота фиксированная.
      *
      * @param button кнопка для стилизации
      */
     private void styleAndAddButton(Button button) {
         button.getStyleClass().add("game-button");
-        button.prefWidthProperty().bind(menuPanel.widthProperty().multiply(1));
-        button.prefHeightProperty().bind(menuPanel.heightProperty().multiply(0.1));
+        button.setMaxWidth(Double.MAX_VALUE);
+        button.setPrefHeight(VirtualViewport.height(0.05));
         ButtonAnimation.addButtonHoverAnimation(button);
         menuPanel.getChildren().add(button);
     }
@@ -193,10 +193,30 @@ public class SettingsMenuController extends VBox {
      */
     private void applyStageSize() {
         Stage stage = appSettings.getStagePain();
+        boolean wasFullscreen = stage.isFullScreen();
         stage.setFullScreen(appSettings.isFullscreen());
         if (!appSettings.isFullscreen()) {
-            stage.setWidth(appSettings.getWindowWidth());
-            stage.setHeight(appSettings.getWindowHeight());
+            if (wasFullscreen) {
+                javafx.application.Platform.runLater(() -> applyWindowedSize(stage));
+            } else {
+                applyWindowedSize(stage);
+            }
         }
+    }
+
+    /**
+     * Задаёт размер окна так, чтобы игровая область (Scene) была ровно
+     * выбранного разрешения: к целевому размеру добавляется рамка окна,
+     * иначе область получается меньше и не 16:9 — появляются полосы.
+     *
+     * @param stage основной Stage
+     */
+    private void applyWindowedSize(Stage stage) {
+        javafx.scene.Scene scene = appSettings.getScene();
+        double decorWidth = Math.max(0, stage.getWidth() - scene.getWidth());
+        double decorHeight = Math.max(0, stage.getHeight() - scene.getHeight());
+        stage.setWidth(appSettings.getWindowWidth() + decorWidth);
+        stage.setHeight(appSettings.getWindowHeight() + decorHeight);
+        stage.centerOnScreen();
     }
 }

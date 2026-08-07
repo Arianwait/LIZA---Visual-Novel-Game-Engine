@@ -10,7 +10,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
@@ -29,11 +28,12 @@ import kz.aws.game.mainscene.LoadingScreen;
 import kz.aws.game.scenelist.GameData;
 import kz.aws.game.scenelist.SceneBuilder;
 import kz.aws.game.scenelist.SceneInfo;
+import kz.aws.game.utils.VirtualViewport;
 
 /**
- * Единый FXML-контроллер для панелей сохранения и загрузки.
- * Заменяет дублирующиеся SaveTable и LoudTable, объединяя общий UI-код
- * и разделяя логику по режиму (SAVE / LOAD).
+ * Единый FXML-контроллер для панелей сохранения и загрузки:
+ * общий UI-код с разделением логики по режиму (SAVE / LOAD).
+ * Все размеры — в пикселях дизайн-разрешения {@link VirtualViewport}.
  */
 public class SaveLoadPanelController extends VBox {
 
@@ -100,13 +100,13 @@ public class SaveLoadPanelController extends VBox {
     }
 
     /**
-     * Привязывает размер шрифта заголовка к высоте Stage.
+     * Устанавливает размер шрифта заголовка в дизайн-пикселях.
      */
     private void bindTitleFontSize() {
         titleText.setFill(javafx.scene.paint.Color.WHITE);
-        titleText.styleProperty().bind(Bindings.format(
+        titleText.setStyle(String.format(
                 "-fx-font-size: %.0fpx; -fx-font-weight: bold;",
-                appSettings.getStagePain().heightProperty().multiply(0.035)));
+                VirtualViewport.height(0.035)));
     }
 
     /**
@@ -220,33 +220,28 @@ public class SaveLoadPanelController extends VBox {
         this.root = root;
         root.getChildren().add(menuPanel);
         AnimationUtils.slideInFromSide(menuPanel,
-                appSettings.getScene().getWidth(), 0, SLIDE_DURATION_MS);
-        bindPanelMargins(root);
+                VirtualViewport.DESIGN_WIDTH, 0, SLIDE_DURATION_MS);
+        applyPanelLayout();
         SceneInfo.disableEventHandler(root);
     }
 
     /**
-     * Привязывает внешние отступы панели к размерам сцены через listener.
-     * Панель располагается внизу экрана с горизонтальными отступами.
-     *
-     * @param root корневой StackPane
+     * Задаёт размеры и отступы панели в дизайн-пикселях.
+     * Панель располагается по центру экрана.
      */
-    private void bindPanelMargins(StackPane root) {
-        javafx.scene.Scene scene = appSettings.getScene();
+    private void applyPanelLayout() {
         StackPane.setAlignment(menuPanel, Pos.CENTER);
         menuPanel.setMaxWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
         menuPanel.setMaxHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
-        menuPanel.prefWidthProperty().bind(scene.widthProperty().multiply(0.45));
-        menuPanel.prefHeightProperty().bind(scene.heightProperty().multiply(0.65));
-        menuPanel.spacingProperty().bind(scene.heightProperty().multiply(0.012));
-        menuPanel.paddingProperty().bind(javafx.beans.binding.Bindings.createObjectBinding(
-                () -> new Insets(
-                        scene.getHeight() * 0.04,
-                        scene.getWidth() * 0.04,
-                        scene.getHeight() * 0.04,
-                        scene.getWidth() * 0.04),
-                scene.widthProperty(), scene.heightProperty()));
-        buttonsBox.spacingProperty().bind(scene.heightProperty().multiply(0.005));
+        menuPanel.setPrefWidth(VirtualViewport.width(0.45));
+        menuPanel.setPrefHeight(VirtualViewport.height(0.65));
+        menuPanel.setSpacing(VirtualViewport.height(0.012));
+        menuPanel.setPadding(new Insets(
+                VirtualViewport.height(0.04),
+                VirtualViewport.width(0.04),
+                VirtualViewport.height(0.04),
+                VirtualViewport.width(0.04)));
+        buttonsBox.setSpacing(VirtualViewport.height(0.005));
     }
 
     /**
@@ -254,7 +249,7 @@ public class SaveLoadPanelController extends VBox {
      */
     public void closePanel() {
         AnimationUtils.slideOutToSide(menuPanel, 0,
-                appSettings.getScene().getWidth(), SLIDE_DURATION_MS,
+                VirtualViewport.DESIGN_WIDTH, SLIDE_DURATION_MS,
                 () -> {
                     root.getChildren().remove(menuPanel);
                     SceneInfo.enableEventHandler(root);
@@ -325,11 +320,7 @@ public class SaveLoadPanelController extends VBox {
         dialog.show(
                 "Вы уверены, загрузить сохранения, все не сохраненые данные будут удалены?",
                 null,
-                () -> {
-                    appSettings.getRoot().getChildren().remove(menuPanel);
-                    appSettings.getRoot().getChildren().clear();
-                    executeLoad(fileName, sceneId);
-                },
+                () -> executeLoad(fileName, sceneId),
                 () -> System.out.println("Отмена смены сохранения"),
                 buttonsBox);
     }
@@ -341,16 +332,11 @@ public class SaveLoadPanelController extends VBox {
      * @param sceneId  id сцены
      */
     private void executeLoad(String fileName, int sceneId) {
-        appSettings.getRoot().getChildren().clear();
-        LoadingScreen loadingScreen = new LoadingScreen(
-                appSettings.getStagePain().getWidth(),
-                appSettings.getStagePain().getHeight());
-        appSettings.getStagePain().getScene().setRoot(loadingScreen.getRoot());
+        LoadingScreen loadingScreen = new LoadingScreen();
+        appSettings.getRoot().getChildren().setAll(loadingScreen.getRoot());
         appSettings.applyThemeToRoot();
-        loadingScreen.startLoading(1, () -> {
-            new SceneBuilder(appSettings, fileName, sceneId);
-            appSettings.getStagePain().getScene().setRoot(appSettings.getRoot());
-        });
+        loadingScreen.startLoading(1,
+                () -> new SceneBuilder(appSettings, fileName, sceneId));
     }
 
     /**

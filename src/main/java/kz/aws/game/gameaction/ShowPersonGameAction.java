@@ -18,6 +18,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import kz.aws.game.character.ICharacter;
+import kz.aws.game.utils.VirtualViewport;
 
 /**
  * Команда показа персонажа на сцене с указанной позой (загрузка из Person.xml).
@@ -43,8 +44,8 @@ public final class ShowPersonGameAction implements GameActionHandler {
         Image image = new Image(imagePath);
         ImageView view = new ImageView(image);
         view.setPreserveRatio(true);
-        view.setFitWidth(ctx.getAppSettings().getScene().getWidth() * 0.8);
-        view.setFitHeight(ctx.getAppSettings().getScene().getHeight() * 0.8);
+        view.setFitWidth(VirtualViewport.width(0.8));
+        view.setFitHeight(VirtualViewport.height(0.8));
 
         character.setCharacterImageView(view);
         root.getChildren().add(view);

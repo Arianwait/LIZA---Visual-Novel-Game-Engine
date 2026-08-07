@@ -6,8 +6,6 @@ import org.json.simple.JSONObject;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.media.MediaPlayer;
@@ -51,13 +49,15 @@ public interface AppSettings {
     
     MediaPlayer getMediaPlayer();
     
+    /**
+     * Применяет игровой стиль к кнопке внутри VBox-панели: класс game-button,
+     * растягивание по ширине панели и фиксированная высота в дизайн-пикселях.
+     *
+     * @param button кнопка для стилизации
+     * @param root   родительская панель
+     * @return та же кнопка (для чейнинга)
+     */
     Button ButtonStyle(Button button, VBox root);
-    
-    Button ButtonStyle(Button button, HBox root);
-    
-    Button ButtonStyle(Button button, BorderPane root);
-    
-    Button ButtonStyle(Button button, Scene root);
 
 	void updateSettings();
 

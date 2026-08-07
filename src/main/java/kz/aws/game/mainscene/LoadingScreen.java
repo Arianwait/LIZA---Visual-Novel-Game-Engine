@@ -3,7 +3,6 @@ package kz.aws.game.mainscene;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.image.Image;
@@ -12,7 +11,13 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import kz.aws.game.utils.AssetPreloader;
 import kz.aws.game.utils.MenuResourceCache;
+import kz.aws.game.utils.VirtualViewport;
 
+/**
+ * Экран загрузки: логотип, прогресс-бар и статус. Показывается поверх
+ * контент-контейнера на время предзагрузки ресурсов сцены.
+ * Все размеры — в пикселях дизайн-разрешения {@link VirtualViewport}.
+ */
 public class LoadingScreen {
 
     private final StackPane root;
@@ -20,7 +25,10 @@ public class LoadingScreen {
     private final Label statusLabel;
     private final ImageView logoImageView;
 
-    public LoadingScreen(double width, double height) {
+    /**
+     * Собирает экран загрузки в дизайн-размерах.
+     */
+    public LoadingScreen() {
         root = new StackPane();
         root.getStyleClass().add("loading-root");
         root.setStyle("-fx-background-color: black;");
@@ -28,16 +36,14 @@ public class LoadingScreen {
         VBox content = new VBox(20);
         content.setAlignment(Pos.CENTER);
 
-        // Логотип
         Image logoImage = MenuResourceCache.getImage("file:lib/Logo/logo.png");
         if (logoImage == null) {
-            // Если нет в кеше, загружаем напрямую
             logoImage = new Image("file:lib/Logo/logo.png");
         }
         logoImageView = new ImageView(logoImage);
         logoImageView.setPreserveRatio(true);
-        logoImageView.setFitWidth(width * 0.4); // 40% ширины экрана
-        logoImageView.setFitHeight(height * 0.4); // 40% высоты экрана
+        logoImageView.setFitWidth(VirtualViewport.width(0.4));
+        logoImageView.setFitHeight(VirtualViewport.height(0.4));
         logoImageView.setOpacity(0.9);
 
         statusLabel = new Label("Loading...");
@@ -46,17 +52,18 @@ public class LoadingScreen {
 
         progressBar = new ProgressBar(0);
         progressBar.getStyleClass().add("loading-bar");
-        progressBar.setPrefWidth(width * 0.3); // 30% ширины экрана
+        progressBar.setPrefWidth(VirtualViewport.width(0.3));
         progressBar.setPrefHeight(20);
 
         content.getChildren().addAll(logoImageView, statusLabel, progressBar);
         root.getChildren().add(content);
     }
 
-    public Scene getScene() {
-        return null; // Not used
-    }
-    
+    /**
+     * Возвращает корневой контейнер экрана загрузки.
+     *
+     * @return StackPane экрана загрузки
+     */
     public StackPane getRoot() {
         return root;
     }

@@ -11,6 +11,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 import kz.aws.game.engine.model.VisualEffectCommand;
+import kz.aws.game.utils.VirtualViewport;
 
 /**
  * Эффект засыпания — глаза моргают с нарастающим закрытием.
@@ -52,9 +53,8 @@ public class CloseEyesEffectPlayer implements VisualEffectPlayer {
     @Override
     public void play(StackPane root, Pane sceneContentLayer,
                      VisualEffectCommand command, Runnable onComplete) {
-        double width = root.getWidth() > 0 ? root.getWidth() : 1280;
-        double height = root.getHeight() > 0 ? root.getHeight() : 720;
-        double halfHeight = height / 2;
+        double width = VirtualViewport.DESIGN_WIDTH;
+        double halfHeight = VirtualViewport.DESIGN_HEIGHT / 2;
 
         createLids(width, halfHeight);
         root.getChildren().addAll(topLid, bottomLid);
@@ -80,8 +80,7 @@ public class CloseEyesEffectPlayer implements VisualEffectPlayer {
 
         if (topLid == null || bottomLid == null) return;
 
-        double height = root.getHeight() > 0 ? root.getHeight() : 720;
-        double halfHeight = height / 2;
+        double halfHeight = VirtualViewport.DESIGN_HEIGHT / 2;
 
         ParallelTransition exit = buildExitAnimation(halfHeight);
         exit.setOnFinished(e -> removeLids(root));

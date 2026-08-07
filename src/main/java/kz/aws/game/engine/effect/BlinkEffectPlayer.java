@@ -20,6 +20,7 @@ import javafx.scene.shape.QuadCurveTo;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 import kz.aws.game.engine.model.VisualEffectCommand;
+import kz.aws.game.utils.VirtualViewport;
 
 /**
  * Эффект моргания (полузакрытые глаза) — устойчивый эффект.
@@ -65,8 +66,8 @@ public class BlinkEffectPlayer implements VisualEffectPlayer {
     @Override
     public void play(StackPane root, Pane sceneContentLayer,
                      VisualEffectCommand command, Runnable onComplete) {
-        sceneWidth = root.getWidth() > 0 ? root.getWidth() : 1280;
-        double height = root.getHeight() > 0 ? root.getHeight() : 720;
+        sceneWidth = VirtualViewport.DESIGN_WIDTH;
+        double height = VirtualViewport.DESIGN_HEIGHT;
         double closeHeight = height / 2 + BLUR_RADIUS;
         double holdHeight = height * LID_HOLD_RATIO;
         clipH = height / 2 + BLUR_RADIUS;

@@ -34,12 +34,12 @@ import kz.aws.game.buttonaction.ButtonActionRegistry;
 import kz.aws.game.scenelist.SceneInfo;
 import kz.aws.game.utils.UiConfigParser;
 import kz.aws.game.utils.UiFactory;
+import kz.aws.game.utils.VirtualViewport;
 
 /**
- * Контроллер панели диалога (FXML).
- * Заменяет старый TableDatail — управляет текстом, именем персонажа,
- * кнопками и анимацией печати. Все размеры привязаны к размерам сцены
- * через property binding, что обеспечивает корректное масштабирование.
+ * Контроллер панели диалога (FXML): текст, имя персонажа, кнопки навигации
+ * и анимация печати. Все размеры задаются один раз в пикселях
+ * дизайн-разрешения {@link kz.aws.game.utils.VirtualViewport}.
  */
 public class DialogPanelController implements DialogPanel {
 
@@ -68,34 +68,32 @@ public class DialogPanelController implements DialogPanel {
     private String fullText;
     private int currentIndex;
     private Timeline typingTimeline;
-    private Scene sceneRef;
     private SceneSettings settingsRef;
 
     /**
-     * Инициализирует панель после загрузки FXML. Привязывает размеры
-     * элементов к размерам сцены и настраивает визуальный режим.
+     * Инициализирует панель после загрузки FXML: задаёт размеры элементов
+     * в дизайн-пикселях и настраивает визуальный режим.
      *
      * @param appSettings настройки приложения
-     * @param scene       текущая сцена (для привязки размеров)
+     * @param scene       текущая сцена (для горячих клавиш)
      * @param settings    настройки внешнего вида панели
      */
     public void initialize(AppSettings appSettings, Scene scene, SceneSettings settings) {
-        this.sceneRef = scene;
         this.settingsRef = settings;
 
         setupTextEffects();
         setupButtons(appSettings, settings);
-        setupHotkeyHints(scene, settings);
-        bindFontSizes(scene, settings);
+        setupHotkeyHints();
+        applyFontSizes(settings);
 
         if (settings.useGradientPanel) {
-            setupGradientMode(scene, settings);
+            setupGradientMode(settings);
         } else {
-            setupImageMode(scene, settings);
+            setupImageMode(settings);
         }
 
-        bindButtonSizes(scene, settings);
-        bindContainerSize(scene);
+        applyButtonSizes(settings);
+        applyContainerSize();
         setupHotkeys(appSettings, scene);
     }
 
@@ -115,34 +113,38 @@ public class DialogPanelController implements DialogPanel {
     }
 
     /**
-     * Создаёт подсказки горячих клавиш внизу слева.
-     *
-     * @param scene    сцена
-     * @param settings настройки
+     * Создаёт подсказки горячих клавиш внизу слева (размеры в дизайн-пикселях).
      */
-    private void setupHotkeyHints(Scene scene, SceneSettings settings) {
-        hotkeyHints.spacingProperty().bind(scene.heightProperty().multiply(0.003));
-        hotkeyHints.paddingProperty().bind(Bindings.createObjectBinding(
-                () -> new Insets(0, 0, scene.getHeight() * 0.01, scene.getWidth() * 0.01),
-                scene.widthProperty(), scene.heightProperty()));
-        navButtons.spacingProperty().bind(scene.widthProperty().multiply(0.006));
-        navButtons.paddingProperty().bind(Bindings.createObjectBinding(
-                () -> new Insets(0, scene.getWidth() * 0.01, scene.getHeight() * 0.01, 0),
-                scene.widthProperty(), scene.heightProperty()));
+    private void setupHotkeyHints() {
+        hotkeyHints.setSpacing(VirtualViewport.height(0.003));
+        hotkeyHints.setPadding(new Insets(0, 0,
+                VirtualViewport.height(0.01), VirtualViewport.width(0.01)));
+        navButtons.setSpacing(VirtualViewport.width(0.006));
+        navButtons.setPadding(new Insets(0,
+                VirtualViewport.width(0.01), VirtualViewport.height(0.01), 0));
 
+        String keyStyle = fontSizeStyle(VirtualViewport.height(0.014));
+        String labelStyle = fontSizeStyle(VirtualViewport.height(0.013));
         String[][] hints = {{"Esc", "Меню"}, {"Tab", "Журнал"}, {"Ctrl", "Скрыть интерфейс"}, {"F", "Авто"}};
         for (String[] hint : hints) {
             Text keyText = new Text(hint[0]);
             keyText.getStyleClass().add("hotkey-key");
+            keyText.setStyle(keyStyle);
             Text labelText = new Text("  " + hint[1]);
             labelText.getStyleClass().add("hotkey-label");
-            keyText.styleProperty().bind(Bindings.concat(
-                    "-fx-font-size: ", scene.heightProperty().multiply(0.014).asString(), "px;"));
-            labelText.styleProperty().bind(Bindings.concat(
-                    "-fx-font-size: ", scene.heightProperty().multiply(0.013).asString(), "px;"));
-            javafx.scene.text.TextFlow hintFlow = new javafx.scene.text.TextFlow(keyText, labelText);
-            hotkeyHints.getChildren().add(hintFlow);
+            labelText.setStyle(labelStyle);
+            hotkeyHints.getChildren().add(new javafx.scene.text.TextFlow(keyText, labelText));
         }
+    }
+
+    /**
+     * Формирует inline-стиль размера шрифта.
+     *
+     * @param sizePx размер в дизайн-пикселях
+     * @return строка стиля вида "-fx-font-size: NNpx;"
+     */
+    private static String fontSizeStyle(double sizePx) {
+        return String.format("-fx-font-size: %.1fpx;", sizePx);
     }
 
     /**
@@ -227,164 +229,142 @@ public class DialogPanelController implements DialogPanel {
     }
 
     /**
-     * Привязывает размер шрифтов диалога и имени к высоте сцены.
+     * Устанавливает размеры шрифтов диалога и имени в дизайн-пикселях.
+     * Стиль имени остаётся binding'ом — в него подмешивается цвет персонажа.
      *
-     * @param scene    сцена для привязки
      * @param settings настройки множителей
      */
-    private void bindFontSizes(Scene scene, SceneSettings settings) {
-        textContainer.spacingProperty().bind(scene.heightProperty().multiply(0.006));
-        dialogueText.styleProperty().bind(Bindings.concat(
-                "-fx-font-size: ",
-                scene.heightProperty().multiply(settings.dialogFontSizeMultiplier).asString(),
-                "px;"));
+    private void applyFontSizes(SceneSettings settings) {
+        textContainer.setSpacing(VirtualViewport.height(0.006));
+        dialogueText.setStyle(
+                fontSizeStyle(VirtualViewport.height(settings.dialogFontSizeMultiplier)));
 
         nameText.styleProperty().bind(Bindings.concat(
-                "-fx-font-size: ",
-                scene.heightProperty().multiply(settings.nameFontSizeMultiplier).asString(),
-                "px; ", nameColorStyle));
+                fontSizeStyle(VirtualViewport.height(settings.nameFontSizeMultiplier)),
+                " ", nameColorStyle));
 
-        dialogueText.wrappingWidthProperty().bind(
-                scene.widthProperty().multiply(settings.textContentWidth));
-        dialogueTextFlow.prefWidthProperty().bind(
-                scene.widthProperty().multiply(settings.textContentWidth));
+        dialogueText.setWrappingWidth(VirtualViewport.width(settings.textContentWidth));
+        dialogueTextFlow.setPrefWidth(VirtualViewport.width(settings.textContentWidth));
     }
 
     /**
      * Настраивает режим градиентной панели (полупрозрачный фон снизу).
      *
-     * @param scene    сцена для привязки размеров
      * @param settings настройки градиента
      */
-    private void setupGradientMode(Scene scene, SceneSettings settings) {
+    private void setupGradientMode(SceneSettings settings) {
         backgroundImageView.setVisible(false);
         backgroundImageView.setManaged(false);
 
-        tablePane.prefWidthProperty().bind(scene.widthProperty());
-        tablePane.prefHeightProperty().bind(
-                scene.heightProperty().multiply(settings.gradientPanelHeightMultiplier));
+        tablePane.setPrefWidth(VirtualViewport.DESIGN_WIDTH);
+        tablePane.setPrefHeight(VirtualViewport.height(settings.gradientPanelHeightMultiplier));
         tablePane.setMaxHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
         tablePane.setStyle(String.format(
                 "-fx-background-color: linear-gradient(to bottom, %s, %s);",
                 settings.gradientStartColor, settings.gradientEndColor));
         StackPane.setAlignment(tablePane, Pos.BOTTOM_CENTER);
 
-        bindTextMargins(scene, settings);
-        bindMenuMarginsGradient(scene, settings);
-        setupGradientButtonStyles(scene, settings);
+        applyTextMargins(settings);
+        applyGradientNavButtonsLayout(settings);
+        setupGradientButtonStyles(settings);
 
         VBox.setVgrow(textContainer, javafx.scene.layout.Priority.ALWAYS);
     }
 
     /**
      * Настраивает режим панели с фоновой картинкой.
+     * Множители размеров исторически заданы относительно противоположной оси
+     * (ширина — от высоты, высота — от ширины) — сохранено для совместимости
+     * существующих конфигов SceneSettings.xml.
      *
-     * @param scene    сцена для привязки размеров
      * @param settings настройки картинки
      */
-    private void setupImageMode(Scene scene, SceneSettings settings) {
+    private void setupImageMode(SceneSettings settings) {
         backgroundImageView.setVisible(true);
         backgroundImageView.setManaged(true);
         backgroundImageView.setImage(new Image(settings.tableImagePath));
         backgroundImageView.setSmooth(true);
-        backgroundImageView.fitWidthProperty().bind(
-                scene.heightProperty().multiply(settings.tableWidthMultiplier));
-        backgroundImageView.fitHeightProperty().bind(
-                scene.widthProperty().multiply(settings.tableHeightMultiplier));
+        backgroundImageView.setFitWidth(VirtualViewport.height(settings.tableWidthMultiplier));
+        backgroundImageView.setFitHeight(VirtualViewport.width(settings.tableHeightMultiplier));
 
-        tablePane.maxWidthProperty().bind(backgroundImageView.fitWidthProperty());
-        tablePane.maxHeightProperty().bind(backgroundImageView.fitHeightProperty());
+        tablePane.setMaxWidth(backgroundImageView.getFitWidth());
+        tablePane.setMaxHeight(backgroundImageView.getFitHeight());
         StackPane.setAlignment(tablePane, Pos.BOTTOM_CENTER);
 
-        bindTextMargins(scene, settings);
+        applyTextMargins(settings);
     }
 
-    // ── Привязки размеров (responsive) ─────────────────────────────
+    // ── Размеры (дизайн-пиксели) ───────────────────────────────────
 
     /**
-     * Привязывает отступы текста к размерам сцены (обновляются при ресайзе).
+     * Устанавливает отступы текста в дизайн-пикселях.
      *
-     * @param scene    сцена
      * @param settings настройки отступов
      */
-    private void bindTextMargins(Scene scene, SceneSettings settings) {
-        textContainer.paddingProperty().bind(Bindings.createObjectBinding(
-                () -> new Insets(
-                        scene.getHeight() * settings.textPaddingTop,
-                        0, 0,
-                        scene.getWidth() * settings.textPaddingLeft),
-                scene.widthProperty(), scene.heightProperty()));
+    private void applyTextMargins(SceneSettings settings) {
+        textContainer.setPadding(new Insets(
+                VirtualViewport.height(settings.textPaddingTop),
+                0, 0,
+                VirtualViewport.width(settings.textPaddingLeft)));
     }
 
     /**
-     * Привязывает отступ кнопок снизу в режиме градиента.
+     * Устанавливает отступ кнопок снизу в режиме градиента.
      *
-     * @param scene    сцена
      * @param settings настройки
      */
-    private void bindMenuMarginsGradient(Scene scene, SceneSettings settings) {
-        navButtons.spacingProperty().bind(
-                scene.widthProperty().multiply(settings.buttonSpacingMultiplier));
-        navButtons.paddingProperty().bind(Bindings.createObjectBinding(
-                () -> new Insets(0, 0, scene.getHeight() * 0.01, 0),
-                scene.heightProperty()));
+    private void applyGradientNavButtonsLayout(SceneSettings settings) {
+        navButtons.setSpacing(VirtualViewport.width(settings.buttonSpacingMultiplier));
+        navButtons.setPadding(new Insets(0, 0, VirtualViewport.height(0.01), 0));
     }
 
     /**
-     * Назначает CSS-класс и hover-анимацию навигационным кнопкам в режиме градиента.
+     * Назначает размеры, шрифт и hover-анимацию навигационным кнопкам
+     * в режиме градиента.
      *
-     * @param scene    сцена
      * @param settings настройки кнопок
      */
-    private void setupGradientButtonStyles(Scene scene, SceneSettings settings) {
+    private void setupGradientButtonStyles(SceneSettings settings) {
         for (javafx.scene.Node node : navButtons.getChildren()) {
             if (!(node instanceof Button btn)) continue;
-
-            btn.prefWidthProperty().bind(
-                    scene.heightProperty().multiply(settings.buttonHeightMultiplier));
-            btn.prefHeightProperty().bind(
-                    scene.heightProperty().multiply(settings.buttonHeightMultiplier));
-            btn.styleProperty().bind(Bindings.concat(
-                    "-fx-font-size: ",
-                    scene.heightProperty().multiply(settings.buttonFontSizeMultiplier * 1.2).asString(),
-                    "px;"));
-
+            applyNavButtonSize(btn, settings);
             addButtonHoverAnimation(btn);
         }
     }
 
     /**
-     * Привязывает размеры всех кнопок к сцене (общее для обоих режимов).
+     * Устанавливает размеры всех навигационных кнопок в режиме картинки.
      *
-     * @param scene    сцена
      * @param settings настройки
      */
-    private void bindButtonSizes(Scene scene, SceneSettings settings) {
+    private void applyButtonSizes(SceneSettings settings) {
+        if (settingsRef.useGradientPanel) return;
         for (javafx.scene.Node node : navButtons.getChildren()) {
             if (!(node instanceof Button btn)) continue;
-            if (settingsRef.useGradientPanel) continue;
-
-            btn.prefWidthProperty().unbind();
-            btn.prefHeightProperty().unbind();
-            btn.prefWidthProperty().bind(
-                    scene.heightProperty().multiply(settings.buttonHeightMultiplier));
-            btn.prefHeightProperty().bind(
-                    scene.heightProperty().multiply(settings.buttonHeightMultiplier));
-            btn.styleProperty().bind(Bindings.concat(
-                    "-fx-font-size: ",
-                    scene.heightProperty().multiply(settings.buttonFontSizeMultiplier * 1.2).asString(),
-                    "px;"));
+            applyNavButtonSize(btn, settings);
         }
     }
 
     /**
-     * Привязывает размер корневого контейнера к сцене.
+     * Задаёт квадратный размер и шрифт навигационной кнопки в дизайн-пикселях.
      *
-     * @param scene сцена
+     * @param btn      кнопка
+     * @param settings настройки
      */
-    private void bindContainerSize(Scene scene) {
-        rootPane.prefWidthProperty().bind(scene.widthProperty());
-        rootPane.prefHeightProperty().bind(scene.heightProperty());
+    private void applyNavButtonSize(Button btn, SceneSettings settings) {
+        double size = VirtualViewport.height(settings.buttonHeightMultiplier);
+        btn.setPrefWidth(size);
+        btn.setPrefHeight(size);
+        btn.setStyle(fontSizeStyle(
+                VirtualViewport.height(settings.buttonFontSizeMultiplier * 1.2)));
+    }
+
+    /**
+     * Устанавливает размер корневого контейнера равным дизайн-разрешению.
+     */
+    private void applyContainerSize() {
+        rootPane.setPrefWidth(VirtualViewport.DESIGN_WIDTH);
+        rootPane.setPrefHeight(VirtualViewport.DESIGN_HEIGHT);
     }
 
     /**
@@ -685,16 +665,14 @@ public class DialogPanelController implements DialogPanel {
     }
 
     /**
-     * Привязывает размер шрифта сегмента к высоте сцены.
+     * Устанавливает размер шрифта сегмента в дизайн-пикселях.
      *
      * @param node текстовый узел
      */
     private void bindSegmentFontSize(Text node) {
-        if (sceneRef == null || settingsRef == null) return;
-        node.styleProperty().bind(Bindings.concat(
-                "-fx-font-size: ",
-                sceneRef.heightProperty().multiply(settingsRef.dialogFontSizeMultiplier).asString(),
-                "px;"));
+        if (settingsRef == null) return;
+        node.setStyle(fontSizeStyle(
+                VirtualViewport.height(settingsRef.dialogFontSizeMultiplier)));
     }
 
     /**
