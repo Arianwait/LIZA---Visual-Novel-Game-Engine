@@ -3,11 +3,10 @@ package kz.aws.game.scenedetails;
 import java.io.File;
 import java.net.URL;
 
-import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -17,11 +16,11 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import kz.aws.game.animation.ButtonAnimation;
 import kz.aws.game.appsettings.AppSettings;
+import kz.aws.game.utils.VirtualViewport;
 
 /**
- * FXML-контроллер диалога подтверждения. Заменяет ConfirmActionDialog,
- * убирая дублирование двух идентичных show()-методов и добавляя
- * адаптивные биндинги для корректного масштабирования.
+ * FXML-контроллер диалога подтверждения (Да/Нет).
+ * Все размеры — в пикселях дизайн-разрешения {@link VirtualViewport}.
  */
 public class ConfirmDialogController extends StackPane {
 
@@ -103,10 +102,9 @@ public class ConfirmDialogController extends StackPane {
             backgroundImage.setVisible(false);
             return;
         }
-        Scene scene = appSettings.getScene();
         backgroundImage.setImage(new Image(imagePath));
-        backgroundImage.fitWidthProperty().bind(scene.widthProperty().multiply(0.5));
-        backgroundImage.fitHeightProperty().bind(scene.heightProperty().multiply(0.3));
+        backgroundImage.setFitWidth(VirtualViewport.width(0.5));
+        backgroundImage.setFitHeight(VirtualViewport.height(0.3));
     }
 
     /**
@@ -117,11 +115,10 @@ public class ConfirmDialogController extends StackPane {
     private void setupMessage(String message) {
         messageText.setText(message);
         messageText.setFill(javafx.scene.paint.Color.WHITE);
-        messageText.styleProperty().bind(Bindings.format(
+        messageText.setStyle(String.format(
                 "-fx-font-size: %.0fpx; -fx-font-weight: bold;",
-                appSettings.getRoot().heightProperty().multiply(0.025)));
-        messageText.wrappingWidthProperty().bind(
-                this.prefWidthProperty().multiply(0.85));
+                VirtualViewport.height(0.025)));
+        messageText.setWrappingWidth(VirtualViewport.width(0.4) * 0.85);
     }
 
     /**
@@ -150,30 +147,27 @@ public class ConfirmDialogController extends StackPane {
      */
     private void styleButton(Button button) {
         button.getStyleClass().add("game-button");
-        button.prefWidthProperty().bind(appSettings.getScene().widthProperty().multiply(0.1));
-        button.prefHeightProperty().bind(appSettings.getScene().heightProperty().multiply(0.05));
+        button.setPrefWidth(VirtualViewport.width(0.1));
+        button.setPrefHeight(VirtualViewport.height(0.05));
         ButtonAnimation.addButtonHoverAnimation(button);
     }
 
     /**
-     * Привязывает отступы элементов к размерам сцены через listener.
+     * Задаёт размеры и отступы диалога в дизайн-пикселях.
      */
     private void bindResponsiveLayout() {
-        Scene scene = appSettings.getScene();
         this.setMaxWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
         this.setMaxHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
-        this.prefWidthProperty().bind(scene.widthProperty().multiply(0.4));
+        this.setPrefWidth(VirtualViewport.width(0.4));
         StackPane.setAlignment(this, Pos.CENTER);
 
-        contentBox.spacingProperty().bind(scene.heightProperty().multiply(0.025));
-        contentBox.paddingProperty().bind(javafx.beans.binding.Bindings.createObjectBinding(
-                () -> new javafx.geometry.Insets(
-                        scene.getHeight() * 0.035,
-                        scene.getWidth() * 0.03,
-                        scene.getHeight() * 0.035,
-                        scene.getWidth() * 0.03),
-                scene.widthProperty(), scene.heightProperty()));
-        buttonBox.spacingProperty().bind(scene.widthProperty().multiply(0.02));
+        contentBox.setSpacing(VirtualViewport.height(0.025));
+        contentBox.setPadding(new Insets(
+                VirtualViewport.height(0.035),
+                VirtualViewport.width(0.03),
+                VirtualViewport.height(0.035),
+                VirtualViewport.width(0.03)));
+        buttonBox.setSpacing(VirtualViewport.width(0.02));
     }
 
     /**

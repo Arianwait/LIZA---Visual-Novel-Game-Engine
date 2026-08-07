@@ -15,7 +15,7 @@ import kz.aws.game.scenelist.SceneInfo;
 
 /**
  * Регистр панелей по id. Панели из Panels.xml показываются через {@link #show(String, AppSettings)}.
- * Сканируются только panel и mainscene (MainMenu, SettingsMenu, SceneSelection).
+ * Сканируются только panel и mainscene (MainMenuController, SettingsMenuController, SceneSelection).
  */
 public final class PanelRegistry {
 

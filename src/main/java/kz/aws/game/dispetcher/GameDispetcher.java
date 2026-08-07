@@ -3,73 +3,64 @@ package kz.aws.game.dispetcher;
 import java.io.Serializable;
 
 import javafx.application.Application;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.appsettings.JsonParser;
 import kz.aws.game.mainscene.LogoAnimation;
+import kz.aws.game.utils.VirtualViewport;
 
+/**
+ * Точка входа приложения. Создаёт Stage и Scene, разворачивает
+ * {@link VirtualViewport}: весь интерфейс живёт в контейнере фиксированного
+ * дизайн-разрешения и масштабируется под реальный размер окна одним трансформом.
+ */
 public class GameDispetcher extends Application implements Serializable {
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 8222725889624267118L;
-	private Stage primaryStage; // Сохраняем основной Stage
+	private Stage primaryStage;
 
 	public static void main(String[] args) {
 		launch(args);
 	}
 
+	/**
+	 * Инициализирует окно, вьюпорт и стартовую анимацию логотипа.
+	 *
+	 * @param primaryStage основной Stage приложения
+	 */
 	@Override
 	public void start(Stage primaryStage) {
 		this.primaryStage = primaryStage;
 
-			Image ico = new Image("file:lib/Logo/logo.png");
-			primaryStage.getIcons().add(ico);
+		primaryStage.getIcons().add(new Image("file:lib/Logo/logo.png"));
 
-			primaryStage.setResizable(false);
+		AppSettings appSettings = JsonParser.readConfig();
+		changeResolution(appSettings);
+		primaryStage.setTitle("Innagano");
 
-			// Чтение настроек из JSON
-			AppSettings appSettings = JsonParser.readConfig();
-			changeResolution(appSettings);
-			primaryStage.setTitle("Innagano");
+		appSettings.setGamedispetcher(this);
+		appSettings.setStagePain(primaryStage);
 
-			appSettings.setGamedispetcher(this);
-			appSettings.setStagePain(primaryStage);
+		VirtualViewport viewport = new VirtualViewport();
+		appSettings.setRoot(viewport.getContentRoot());
+		primaryStage.setFullScreen(appSettings.isFullscreen());
 
-			// Создаем корневой узел для сцены
+		Scene scene = new Scene(viewport.getScreenRoot(),
+				appSettings.getWindowWidth(), appSettings.getWindowHeight());
+		appSettings.setScene(scene);
+		viewport.bindTo(scene);
 
-			StackPane root = new StackPane();
-			appSettings.setRoot(root);
-			primaryStage.setFullScreen(appSettings.isFullscreen());
+		scene.getStylesheets().add("file:lib/config/style.css");
 
-			// Создаем основную сцену
-			Scene scene = new Scene(root, appSettings.getWindowWidth(), appSettings.getWindowHeight());
-			appSettings.setScene(scene);
+		appSettings.getRoot().getChildren().add(new LogoAnimation(appSettings));
 
-			scene.getStylesheets().add("file:lib/config/style.css");
-            // scene.getStylesheets().add("file:lib/config/dialog_styles.css"); // Uncomment if needed
-
-			LogoAnimation logoAnimation = new LogoAnimation(appSettings);
-			root.getChildren().add(logoAnimation);
-
-			// Устанавливаем сцену на основном stage
-			primaryStage.setScene(scene);
-
-			root.setAlignment(Pos.CENTER);
-
-			// Убираем сообщение "Press Esc to exit fullscreen"
-			primaryStage.setFullScreenExitHint("");
-
-			// Заблокируем выход из полноэкранного режима на Esc
-			primaryStage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
-
-			// Отображаем основное окно
-			primaryStage.show();
+		primaryStage.setScene(scene);
+		primaryStage.setFullScreenExitHint("");
+		primaryStage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
+		primaryStage.show();
 	}
 
 	public void changeResolution(AppSettings appSettings) {

@@ -9,7 +9,7 @@ import kz.aws.game.engine.model.ClueData;
 /**
  * Интерфейс панели диалога. Определяет контракт для отображения
  * текста, имени персонажа, управления видимостью и анимациями.
- * Реализации: {@link DialogPanelController} (FXML) и {@link TableDatail} (legacy).
+ * Реализация: {@link DialogPanelController} (FXML).
  */
 public interface DialogPanel {
 

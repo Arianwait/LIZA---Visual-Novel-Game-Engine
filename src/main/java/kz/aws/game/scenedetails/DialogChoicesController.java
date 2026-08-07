@@ -4,11 +4,9 @@ import java.io.File;
 import java.net.URL;
 import java.util.List;
 
-import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -18,6 +16,7 @@ import kz.aws.game.scenelist.SceneBuilder;
 import kz.aws.game.scenelist.SceneInfo;
 import kz.aws.game.utils.SceneSettingsParser;
 import kz.aws.game.utils.SceneSettingsParser.SceneSettings;
+import kz.aws.game.utils.VirtualViewport;
 
 /**
  * FXML-контроллер панели выбора в диалоге. Отображает варианты ответов
@@ -96,13 +95,9 @@ public class DialogChoicesController extends StackPane {
         button.setMaxWidth(Double.MAX_VALUE);
         button.setWrapText(true);
 
-        Scene scene = appSettings.getScene();
-        button.prefHeightProperty().bind(
-                scene.heightProperty().multiply(settings.choicesButtonHeightMultiplier));
-        button.styleProperty().bind(Bindings.concat(
-                "-fx-font-size: ",
-                scene.heightProperty().multiply(settings.choicesFontSizeMultiplier).asString(),
-                "px;"));
+        button.setPrefHeight(VirtualViewport.height(settings.choicesButtonHeightMultiplier));
+        button.setStyle(String.format("-fx-font-size: %.1fpx;",
+                VirtualViewport.height(settings.choicesFontSizeMultiplier)));
 
         ButtonAnimation.addButtonHoverAnimation(button);
 
@@ -114,31 +109,17 @@ public class DialogChoicesController extends StackPane {
     }
 
     /**
-     * Привязывает позицию buttonsContainer через translateX/translateY.
+     * Позиционирует buttonsContainer в дизайн-координатах.
      * x-position и y-position из конфига задают точку (доля экрана 0.0–1.0),
      * вокруг которой центрируется панель.
      */
     private void bindLayout() {
-        Scene scene = appSettings.getScene();
-
-        buttonsContainer.maxWidthProperty().bind(
-                scene.widthProperty().multiply(settings.choicesWidthMultiplier));
-
-        Runnable update = () -> {
-            double w = scene.getWidth();
-            double h = scene.getHeight();
-
-            double offsetX = (settings.choicesXPosition - 0.5) * w;
-            double offsetY = (settings.choicesYPosition - 0.5) * h;
-
-            buttonsContainer.setTranslateX(offsetX);
-            buttonsContainer.setTranslateY(offsetY);
-        };
-
-        scene.widthProperty().addListener((obs, o, n) -> update.run());
-        scene.heightProperty().addListener((obs, o, n) -> update.run());
-        buttonsContainer.needsLayoutProperty().addListener((obs, o, n) -> update.run());
-        update.run();
+        buttonsContainer.setMaxWidth(
+                VirtualViewport.width(settings.choicesWidthMultiplier));
+        buttonsContainer.setTranslateX(
+                VirtualViewport.width(settings.choicesXPosition - 0.5));
+        buttonsContainer.setTranslateY(
+                VirtualViewport.height(settings.choicesYPosition - 0.5));
     }
 
     /**

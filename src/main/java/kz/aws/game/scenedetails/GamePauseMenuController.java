@@ -3,11 +3,10 @@ package kz.aws.game.scenedetails;
 import java.io.File;
 import java.net.URL;
 
-import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -17,6 +16,7 @@ import kz.aws.game.animation.ButtonAnimation;
 import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.buttonaction.ButtonActionRegistry;
 import kz.aws.game.scenelist.SceneInfo;
+import kz.aws.game.utils.VirtualViewport;
 
 /**
  * Overlay-меню паузы во время игры. Появляется поверх сцены
@@ -120,13 +120,13 @@ public class GamePauseMenuController extends StackPane {
     }
 
     /**
-     * Настраивает заголовок с адаптивным шрифтом.
+     * Настраивает заголовок со шрифтом в дизайн-пикселях.
      */
     private void setupTitle() {
         titleText.setFill(Color.web("#e8d5c0"));
-        titleText.styleProperty().bind(Bindings.format(
+        titleText.setStyle(String.format(
                 "-fx-font-size: %.0fpx; -fx-font-weight: bold;",
-                appSettings.getStagePain().heightProperty().multiply(0.035)));
+                VirtualViewport.height(0.035)));
     }
 
     /**
@@ -160,33 +160,28 @@ public class GamePauseMenuController extends StackPane {
     }
 
     /**
-     * Привязывает размеры панели к сцене.
+     * Задаёт размеры панели и кнопок в дизайн-пикселях.
      */
     private void bindLayout() {
-        Scene scene = appSettings.getScene();
-
-        menuPanel.maxWidthProperty().bind(scene.widthProperty().multiply(0.3));
-        menuPanel.maxHeightProperty().bind(scene.heightProperty().multiply(0.6));
+        menuPanel.setMaxWidth(VirtualViewport.width(0.3));
+        menuPanel.setMaxHeight(VirtualViewport.height(0.6));
         StackPane.setAlignment(menuPanel, Pos.CENTER);
 
-        menuPanel.spacingProperty().bind(scene.heightProperty().multiply(0.018));
-        menuPanel.paddingProperty().bind(Bindings.createObjectBinding(
-                () -> new javafx.geometry.Insets(
-                        scene.getHeight() * 0.03,
-                        scene.getWidth() * 0.025,
-                        scene.getHeight() * 0.03,
-                        scene.getWidth() * 0.025),
-                scene.widthProperty(), scene.heightProperty()));
-        buttonsBox.spacingProperty().bind(scene.heightProperty().multiply(0.01));
+        menuPanel.setSpacing(VirtualViewport.height(0.018));
+        menuPanel.setPadding(new Insets(
+                VirtualViewport.height(0.03),
+                VirtualViewport.width(0.025),
+                VirtualViewport.height(0.03),
+                VirtualViewport.width(0.025)));
+        buttonsBox.setSpacing(VirtualViewport.height(0.01));
 
+        String buttonFontStyle = String.format("-fx-font-size: %.0fpx;",
+                VirtualViewport.height(0.018));
         for (javafx.scene.Node node : buttonsBox.getChildren()) {
             if (!(node instanceof Button btn)) continue;
             btn.setMaxWidth(Double.MAX_VALUE);
-            btn.prefHeightProperty().bind(scene.heightProperty().multiply(0.055));
-            btn.styleProperty().bind(Bindings.concat(
-                    "-fx-font-size: ",
-                    scene.heightProperty().multiply(0.018).asString(),
-                    "px;"));
+            btn.setPrefHeight(VirtualViewport.height(0.055));
+            btn.setStyle(buttonFontStyle);
         }
 
         dimBackground.setOnMouseClicked(e -> {
