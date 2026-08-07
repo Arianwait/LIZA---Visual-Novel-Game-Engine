@@ -198,6 +198,10 @@ public class GameEngine {
             System.out.println("DEBUG: Next called but isFinished=true");
             return;
         }
+        if (SceneInfo.isPuzzleActive()) {
+            System.out.println("DEBUG: Next blocked — puzzle is active");
+            return;
+        }
         if (waitingForChoice) {
             System.out.println("DEBUG: Next blocked — waiting for player choice");
             return;
@@ -326,6 +330,10 @@ public class GameEngine {
     }
 
     public void back() {
+        if (SceneInfo.isPuzzleActive()) {
+            System.out.println("DEBUG: Back blocked — puzzle is active");
+            return;
+        }
         if (historyIndex > 0) {
             historyIndex--;
             isFinished = false; // Reset finished state when going back
@@ -621,9 +629,11 @@ public class GameEngine {
         }
 
         SceneInfo.setActivePuzzle(panel);
+        setDialogNavigationEnabled(false);
         final PuzzleCommand finalCmd = cmd;
         panel.setOnComplete(result -> {
             SceneInfo.setActivePuzzle(null);
+            setDialogNavigationEnabled(true);
             root.getChildren().remove(panel);
             SceneInfo.enableEventHandler(root);
 
@@ -651,6 +661,19 @@ public class GameEngine {
         root.getChildren().add(panel);
         StackPane.setAlignment(panel, Pos.CENTER);
         panel.toFront();
+    }
+
+    /**
+     * Включает или выключает кнопки навигации диалога (вперёд/назад)
+     * на время активной мини-игры.
+     *
+     * @param enabled true — навигация доступна
+     */
+    private void setDialogNavigationEnabled(boolean enabled) {
+        DialogPanel dialog = SceneInfo.getTableDatail();
+        if (dialog != null) {
+            dialog.setNavigationEnabled(enabled);
+        }
     }
 
     /** Вызов из кнопки меню (без onComplete). */

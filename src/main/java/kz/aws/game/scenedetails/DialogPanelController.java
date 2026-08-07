@@ -433,6 +433,19 @@ public class DialogPanelController implements DialogPanel {
         }
     }
 
+    /**
+     * Включает или выключает кнопки навигации (вперёд/назад)
+     * на время активной мини-игры.
+     *
+     * @param enabled true — навигация доступна
+     */
+    @Override
+    public void setNavigationEnabled(boolean enabled) {
+        if (navButtons != null) {
+            navButtons.setDisable(!enabled);
+        }
+    }
+
     // ── Текст диалога ──────────────────────────────────────────────
 
     /**

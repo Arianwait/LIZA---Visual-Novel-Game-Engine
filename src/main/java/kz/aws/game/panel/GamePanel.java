@@ -50,4 +50,11 @@ public @interface GamePanel {
      * {@code false} — панель висит поверх, сцена остаётся кликабельной.
      */
     boolean modal() default true;
+
+    /**
+     * {@code true} — в правом верхнем углу панели показывается кнопка
+     * «Пропустить»: мини-игра закрывается и засчитывается как провал
+     * (переход на {@code sceneOnFailure}, если задан).
+     */
+    boolean skippable() default true;
 }

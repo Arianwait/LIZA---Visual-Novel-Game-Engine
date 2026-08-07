@@ -29,7 +29,8 @@ import java.util.List;
     title         = "Улики",
     widthPercent  = 65,
     heightPercent = 75,
-    modal         = true
+    modal         = true,
+    skippable     = false
 )
 public class EvidencePanel extends BaseGamePanel {
 
