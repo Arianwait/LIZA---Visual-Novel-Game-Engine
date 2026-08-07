@@ -2,7 +2,6 @@ package kz.aws.game.mainscene;
 
 import java.util.List;
 
-import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -10,7 +9,6 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import javafx.stage.Stage;
 import kz.aws.game.animation.ButtonAnimation;
 import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.panel.Panel;
@@ -20,10 +18,11 @@ import kz.aws.game.utils.MainMenuConfigParser.MainMenuConfig;
 import kz.aws.game.utils.MenuResourceCache;
 import kz.aws.game.utils.UiConfigParser.ButtonConfig;
 import kz.aws.game.utils.UiFactory;
+import kz.aws.game.utils.VirtualViewport;
 
 /**
- * FXML-контроллер главного меню. Заменяет программную сборку UI из MainMenu.java
- * на декларативный FXML с адаптивными property-биндингами для корректного масштабирования.
+ * FXML-контроллер главного меню. Все размеры и отступы задаются один раз
+ * в пикселях дизайн-разрешения {@link VirtualViewport}.
  */
 @Panel("main-menu")
 public class MainMenuController extends VBox {
@@ -52,7 +51,7 @@ public class MainMenuController extends VBox {
     private void initialize() {
         preloadResources();
         setupTitle();
-        bindResponsiveMargins();
+        applyPanelMargins();
         applyMenuPanelSpacing();
         createButtons();
         appSettings.setMainMenuContentPane(this);
@@ -69,30 +68,23 @@ public class MainMenuController extends VBox {
     }
 
     /**
-     * Настраивает заголовок: текст и адаптивный размер шрифта через биндинг к высоте Stage.
+     * Настраивает заголовок: текст и размер шрифта в дизайн-пикселях.
      */
     private void setupTitle() {
         titleLabel.setText(config.titleText);
-        Stage stage = appSettings.getStagePain();
-        titleLabel.fontProperty().bind(Bindings.createObjectBinding(
-                () -> Font.font("System", FontWeight.findByName(config.titleWeight),
-                        stage.getHeight() * config.titleFontSizeMultiplier),
-                stage.heightProperty()));
+        titleLabel.setFont(Font.font("System", FontWeight.findByName(config.titleWeight),
+                VirtualViewport.height(config.titleFontSizeMultiplier)));
     }
 
     /**
-     * Привязывает внешние отступы (margin) menuPanel к размерам Stage через listener,
-     * чтобы при смене разрешения отступы пересчитывались автоматически.
+     * Устанавливает внешние отступы (margin) menuPanel из конфигурации
+     * в дизайн-пикселях.
      */
-    private void bindResponsiveMargins() {
-        Stage stage = appSettings.getStagePain();
-        Runnable updateMargin = () -> VBox.setMargin(menuPanel, new Insets(0,
-                stage.getWidth() * config.marginRight,
-                stage.getHeight() * config.marginTop,
-                stage.getWidth() * config.marginLeft));
-        stage.widthProperty().addListener((obs, o, n) -> updateMargin.run());
-        stage.heightProperty().addListener((obs, o, n) -> updateMargin.run());
-        updateMargin.run();
+    private void applyPanelMargins() {
+        VBox.setMargin(menuPanel, new Insets(0,
+                VirtualViewport.width(config.marginRight),
+                VirtualViewport.height(config.marginTop),
+                VirtualViewport.width(config.marginLeft)));
     }
 
     /**
@@ -117,14 +109,15 @@ public class MainMenuController extends VBox {
     }
 
     /**
-     * Привязывает размер кнопки к размерам menuPanel через property-биндинг.
+     * Задаёт размер кнопки: ширина растягивается по панели,
+     * высота фиксированная в дизайн-пикселях.
      *
-     * @param button кнопка для привязки
+     * @param button кнопка для настройки
      */
     private void bindButtonSize(Button button) {
         button.getStyleClass().add("game-button");
-        button.prefWidthProperty().bind(menuPanel.widthProperty().multiply(1));
-        button.prefHeightProperty().bind(menuPanel.heightProperty().multiply(0.1));
+        button.setMaxWidth(Double.MAX_VALUE);
+        button.setPrefHeight(VirtualViewport.height(0.05));
         ButtonAnimation.addButtonHoverAnimation(button);
     }
 }

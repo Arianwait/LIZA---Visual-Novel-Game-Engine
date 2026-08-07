@@ -11,7 +11,12 @@ import kz.aws.game.actionscenarios.ShowMainMenu;
 import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.utils.MenuResourceCache;
 import kz.aws.game.utils.ThemesConfigParser;
+import kz.aws.game.utils.VirtualViewport;
 
+/**
+ * Стартовая анимация логотипа: fade-in/fade-out поверх чёрного фона,
+ * параллельно предзагружает ресурсы меню, затем открывает главное меню.
+ */
 public class LogoAnimation extends StackPane {
 
     public LogoAnimation(AppSettings appSettings) {
@@ -38,8 +43,8 @@ public class LogoAnimation extends StackPane {
         logoImageView.setPreserveRatio(true);
         logoImageView.toFront();
 
-        logoImageView.setFitWidth(appSettings.getScene().getWidth() * 0.8);
-        logoImageView.setFitHeight(appSettings.getScene().getHeight() * 0.8);
+        logoImageView.setFitWidth(VirtualViewport.width(0.8));
+        logoImageView.setFitHeight(VirtualViewport.height(0.8));
         
         // Добавление логотипа в вертикальный контейнер (VBox)
         getChildren().add(logoImageView);

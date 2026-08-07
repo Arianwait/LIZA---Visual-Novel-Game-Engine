@@ -1,6 +1,5 @@
 package kz.aws.game.utils;
 
-import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Button;
@@ -11,7 +10,14 @@ import kz.aws.game.buttonaction.ButtonActionRegistry;
 import kz.aws.game.soundtrack.SoundManager;
 import kz.aws.game.utils.UiConfigParser.ButtonConfig;
 
+/**
+ * Фабрика кнопок интерфейса: текст и действие из Buttons.xml, звуки
+ * наведения/клика и единый шрифт в дизайн-пикселях {@link VirtualViewport}.
+ */
 public class UiFactory {
+
+    /** Размер шрифта кнопок в дизайн-пикселях (1.3% высоты дизайн-разрешения). */
+    private static final double BUTTON_FONT_SIZE = VirtualViewport.height(0.013);
 
     /**
      * Создаёт кнопку по конфигу из Buttons.xml; действие выполняется через {@link ButtonActionRegistry} по id.
@@ -26,19 +32,18 @@ public class UiFactory {
         );
     }
 
+    /**
+     * Создаёт кнопку: текст и стиль из конфига, звуки и обработчик действия.
+     *
+     * @param defaultText текст по умолчанию, если в конфиге не задан
+     * @param cssId       id кнопки (для CSS и поиска конфига)
+     * @param action      обработчик нажатия
+     * @param appSettings настройки приложения
+     * @return настроенная кнопка
+     */
     public static Button createButton(String defaultText, String cssId, EventHandler<ActionEvent> action, AppSettings appSettings) {
         Button button = new Button();
-        
-        // === АДАПТИВНЫЙ РАЗМЕР КНОПОК ===
-        // Используем fontProperty binding - это самый надежный способ менять размер текста динамически
-        if (appSettings != null && appSettings.getStagePain() != null) {
-             // Уменьшили шрифт до 1.3% от высоты экрана, чтобы влезал в кнопки
-             button.fontProperty().bind(Bindings.createObjectBinding(() -> 
-                 Font.font("Verdana", FontWeight.BOLD, appSettings.getStagePain().getHeight() * 0.013), 
-                 appSettings.getStagePain().heightProperty()));
-        }
-        
-        // Load config
+        button.setFont(Font.font("Verdana", FontWeight.BOLD, BUTTON_FONT_SIZE));
         ButtonConfig config = UiConfigParser.getButtonConfig(cssId);
         
         if (config != null) {

@@ -8,11 +8,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.Node;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -20,6 +17,7 @@ import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
 import kz.aws.game.animation.ButtonAnimation;
 import kz.aws.game.dispetcher.GameDispetcher;
+import kz.aws.game.utils.VirtualViewport;
 
 @SuppressWarnings("deprecation")
 public class DefaultAppSettings implements AppSettings {
@@ -153,8 +151,7 @@ public class DefaultAppSettings implements AppSettings {
 
 	@Override
 	public void applyThemeToRoot() {
-		Node target = (primaryStage != null && primaryStage.getScene() != null)
-				? primaryStage.getScene().getRoot() : root;
+		Node target = root;
 		if (target == null || target.getStyleClass() == null) return;
 		String themeClass = "theme-" + getUiTheme();
 		target.getStyleClass().removeIf(s -> s.startsWith("theme-"));
@@ -168,7 +165,6 @@ public class DefaultAppSettings implements AppSettings {
 
 	@Override
 	public StackPane getRoot() {
-		// TODO Auto-generated method stub
 		return root;
 	}
 	
@@ -180,48 +176,11 @@ public class DefaultAppSettings implements AppSettings {
 		return this.mediaPlayer;
 	}
 	
+	@Override
 	public Button ButtonStyle(Button button, VBox root) {
 		button.getStyleClass().add("game-button");
-		// button.setStyle("-fx-font-size: "+ getRoot().getHeight() * 0.015 + "px;"); // REMOVED: Managed by UiFactory
-		//button.prefWidthProperty().bind(root.widthProperty().multiply(1));
-		//button.prefHeightProperty().bind(root.heightProperty().multiply(0.1));
-		//VBox.setMargin(button, new Insets(getRoot().getHeight() * 0.005, getRoot().getWidth() * 0.005,  getRoot().getHeight() * 0.005, getRoot().getWidth() * 0.005));
-		// Привязка размеров кнопки к размерам корневого элемента
-        button.prefWidthProperty().bind(root.widthProperty().multiply(1));  // 5% от ширины root
-        button.prefHeightProperty().bind(root.heightProperty().multiply(0.1)); // 5% от высоты root
-        // button.setFont(Font.font(getRoot().getHeight() * 0.005)); // REMOVED: Managed by UiFactory
-		ButtonAnimation.addButtonHoverAnimation(button);
-		return button;
-	}
-	
-	public Button ButtonStyle(Button button, HBox root) {		
-		button.getStyleClass().add("game-button");
-		//HBox.setMargin(button, new Insets(getRoot().getHeight() * 0.005, getRoot().getWidth() * 0.005,  getRoot().getHeight() * 0.005, getRoot().getWidth() * 0.005));
-        button.prefWidthProperty().bind(root.widthProperty().multiply(0.1));  // 5% от ширины root
-        button.prefHeightProperty().bind(root.heightProperty().multiply(0.5)); // 5% от высоты ro
-		ButtonAnimation.addButtonHoverAnimation(button);
-		return button;
-	}
-	
-	public Button ButtonStyle(Button button, BorderPane root) {
-		button.getStyleClass().add("game-button");
-		//button.prefWidthProperty().bind(root.widthProperty().multiply(0.1));
-		//button.prefHeightProperty().bind(root.heightProperty().multiply(0.1));
-		BorderPane.setMargin(button, new Insets(getRoot().getHeight() * 0.005, getRoot().getWidth() * 0.005,  getRoot().getHeight() * 0.005, getRoot().getWidth() * 0.005));
-		ButtonAnimation.addButtonHoverAnimation(button);
-		return button;
-	}
-	
-	public Button ButtonStyle(Button button, Scene root) {
-		button.getStyleClass().add("game-button");
-		// button.setStyle("-fx-font-size: "+ getRoot().getHeight() * 0.015 + "px;"); // REMOVED: Managed by UiFactory
-		//button.prefWidthProperty().bind(root.widthProperty().multiply(1));
-		//button.prefHeightProperty().bind(root.heightProperty().multiply(0.1));
-		//VBox.setMargin(button, new Insets(getRoot().getHeight() * 0.005, getRoot().getWidth() * 0.005,  getRoot().getHeight() * 0.005, getRoot().getWidth() * 0.005));
-		// Привязка размеров кнопки к размерам корневого элемента
-        button.prefWidthProperty().bind(root.widthProperty().multiply(1));  // 5% от ширины root
-        button.prefHeightProperty().bind(root.heightProperty().multiply(0.01)); // 5% от высоты root
-        // button.setFont(Font.font(getRoot().getHeight() * 0.005)); // REMOVED: Managed by UiFactory
+		button.setMaxWidth(Double.MAX_VALUE);
+		button.setPrefHeight(VirtualViewport.height(0.05));
 		ButtonAnimation.addButtonHoverAnimation(button);
 		return button;
 	}
