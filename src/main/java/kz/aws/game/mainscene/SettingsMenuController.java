@@ -88,12 +88,16 @@ public class SettingsMenuController extends VBox {
     }
 
     /**
-     * Заполняет список разрешений и устанавливает текущее значение.
+     * Заполняет список разрешений (только 16:9 — без полос летербокса)
+     * и устанавливает текущее значение.
      */
     private void setupResolutionChoiceBox() {
-        resolutionChoiceBox.getItems().addAll("1024x768", "1280x720", "1920x1080");
-        resolutionChoiceBox.setValue(
-                appSettings.getWindowWidth() + "x" + appSettings.getWindowHeight());
+        resolutionChoiceBox.getItems().addAll("1280x720", "1600x900", "1920x1080");
+        String current = appSettings.getWindowWidth() + "x" + appSettings.getWindowHeight();
+        if (!resolutionChoiceBox.getItems().contains(current)) {
+            current = "1280x720";
+        }
+        resolutionChoiceBox.setValue(current);
     }
 
     /**
@@ -189,10 +193,30 @@ public class SettingsMenuController extends VBox {
      */
     private void applyStageSize() {
         Stage stage = appSettings.getStagePain();
+        boolean wasFullscreen = stage.isFullScreen();
         stage.setFullScreen(appSettings.isFullscreen());
         if (!appSettings.isFullscreen()) {
-            stage.setWidth(appSettings.getWindowWidth());
-            stage.setHeight(appSettings.getWindowHeight());
+            if (wasFullscreen) {
+                javafx.application.Platform.runLater(() -> applyWindowedSize(stage));
+            } else {
+                applyWindowedSize(stage);
+            }
         }
+    }
+
+    /**
+     * Задаёт размер окна так, чтобы игровая область (Scene) была ровно
+     * выбранного разрешения: к целевому размеру добавляется рамка окна,
+     * иначе область получается меньше и не 16:9 — появляются полосы.
+     *
+     * @param stage основной Stage
+     */
+    private void applyWindowedSize(Stage stage) {
+        javafx.scene.Scene scene = appSettings.getScene();
+        double decorWidth = Math.max(0, stage.getWidth() - scene.getWidth());
+        double decorHeight = Math.max(0, stage.getHeight() - scene.getHeight());
+        stage.setWidth(appSettings.getWindowWidth() + decorWidth);
+        stage.setHeight(appSettings.getWindowHeight() + decorHeight);
+        stage.centerOnScreen();
     }
 }
