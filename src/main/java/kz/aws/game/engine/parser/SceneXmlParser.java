@@ -30,6 +30,7 @@ import kz.aws.game.engine.model.VisualEffectCommand;
 import kz.aws.game.engine.model.VisualState;
 import kz.aws.game.engine.model.ZoomEffectCommand;
 import kz.aws.game.engine.resources.CharacterLibrary;
+import kz.aws.game.utils.ResourceLocator;
 
 /**
  * Парсер сценария из XML: превращает элементы {@code <dialog>} в кадры сцен.
@@ -49,7 +50,7 @@ public class SceneXmlParser {
      * @return путь к XML-файлу сценария
      */
     public static String getScenarioPath() {
-        return new File(SCENARIO_PATH).exists() ? SCENARIO_PATH : LEGACY_SCENARIO_PATH;
+        return ResourceLocator.file(SCENARIO_PATH).exists() ? SCENARIO_PATH : LEGACY_SCENARIO_PATH;
     }
 
     /**
@@ -116,7 +117,7 @@ public class SceneXmlParser {
      * @return документ или null, если файл отсутствует либо не разбирается
      */
     private static Document loadScenarioDocument(String scenarioPath) {
-        File xmlFile = new File(scenarioPath);
+        File xmlFile = ResourceLocator.file(scenarioPath);
         if (!xmlFile.exists()) {
             System.err.println("Файл сценария не найден: " + scenarioPath);
             return null;

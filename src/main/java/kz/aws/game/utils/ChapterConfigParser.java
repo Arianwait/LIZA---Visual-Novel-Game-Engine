@@ -21,7 +21,7 @@ public class ChapterConfigParser {
         
         try {
             // Path updated to match file location: lib/config/Chapters.xml
-            File xmlFile = new File("lib/config/Chapters.xml");
+            File xmlFile = ResourceLocator.file("lib/config/Chapters.xml");
             if (!xmlFile.exists()) {
                 System.err.println("Chapter Config not found: " + xmlFile.getAbsolutePath());
                 return;

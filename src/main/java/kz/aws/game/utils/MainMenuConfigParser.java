@@ -18,7 +18,7 @@ public class MainMenuConfigParser {
         if (initialized) return;
         
         try {
-            File xmlFile = new File("lib/config/UI/MainMenu.xml");
+            File xmlFile = ResourceLocator.file("lib/config/UI/MainMenu.xml");
             if (!xmlFile.exists()) {
                 System.err.println("MainMenu config not found: " + xmlFile.getAbsolutePath());
                 // Используем значения по умолчанию

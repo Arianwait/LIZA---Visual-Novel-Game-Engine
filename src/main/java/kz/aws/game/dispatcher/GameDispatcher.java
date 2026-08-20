@@ -16,6 +16,7 @@ import kz.aws.game.engine.parser.ScenarioValidator;
 import kz.aws.game.engine.parser.SceneXmlParser;
 import kz.aws.game.mainscene.LogoAnimation;
 import kz.aws.game.utils.VirtualViewport;
+import kz.aws.game.utils.ResourceLocator;
 
 /**
  * Точка входа приложения. Создаёт Stage и Scene, разворачивает
@@ -75,7 +76,10 @@ public class GameDispatcher extends Application implements Serializable {
 	 */
 	@Override
 	public void start(Stage primaryStage) {
-		primaryStage.getIcons().add(new Image("file:lib/Logo/logo.png"));
+		// без ресурсов игра покажет чёрный экран — сообщаем причину сразу
+		ResourceLocator.exists("lib/Scene");
+
+		primaryStage.getIcons().add(new Image(ResourceLocator.url("lib/Logo/logo.png")));
 		primaryStage.setTitle("Innagano");
 		primaryStage.setResizable(false);
 
@@ -91,7 +95,7 @@ public class GameDispatcher extends Application implements Serializable {
 		appSettings.setScene(scene);
 		viewport.bindTo(scene);
 
-		scene.getStylesheets().add("file:lib/config/style.css");
+		scene.getStylesheets().add(ResourceLocator.url("lib/config/style.css"));
 
 		appSettings.getRoot().getChildren().add(new LogoAnimation(appSettings));
 

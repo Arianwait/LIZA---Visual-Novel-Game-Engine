@@ -64,7 +64,7 @@ public class ThemesConfigParser {
             return new ArrayList<>(cachedThemes);
         }
         try (java.io.Reader reader = java.nio.file.Files.newBufferedReader(
-                java.nio.file.Path.of(CONFIG_PATH), java.nio.charset.StandardCharsets.UTF_8)) {
+                ResourceLocator.resolve(CONFIG_PATH), java.nio.charset.StandardCharsets.UTF_8)) {
             JSONParser parser = new JSONParser();
             Object obj = parser.parse(reader);
             JSONObject root = (JSONObject) obj;

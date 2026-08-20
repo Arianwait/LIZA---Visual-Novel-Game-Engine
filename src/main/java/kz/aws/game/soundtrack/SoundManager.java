@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javafx.scene.media.AudioClip;
+import kz.aws.game.utils.ResourceLocator;
 
 public class SoundManager {
     private static final Map<String, AudioClip> clips = new HashMap<>();
@@ -18,7 +19,7 @@ public class SoundManager {
 
     public static void loadSound(String name, String path) {
         try {
-            File file = new File(path);
+            File file = ResourceLocator.file(path);
             if (file.exists()) {
                 AudioClip clip = new AudioClip(file.toURI().toString());
                 clips.put(name, clip);

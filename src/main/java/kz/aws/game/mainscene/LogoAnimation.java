@@ -12,6 +12,7 @@ import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.utils.MenuResourceCache;
 import kz.aws.game.utils.ThemesConfigParser;
 import kz.aws.game.utils.VirtualViewport;
+import kz.aws.game.utils.ResourceLocator;
 
 /**
  * Стартовая анимация логотипа: fade-in/fade-out поверх чёрного фона,
@@ -32,9 +33,9 @@ public class LogoAnimation extends StackPane {
         System.out.println("Starting MENU resources preload during logo animation...");
         MenuResourceCache.preloadMenuResources(themeBg);
         
-        Image logoImage = MenuResourceCache.getImage("file:lib/Logo/logo.png");
+        Image logoImage = MenuResourceCache.getImage(ResourceLocator.url("lib/Logo/logo.png"));
         if (logoImage == null) {
-            logoImage = new Image("file:lib/Logo/logo.png");
+            logoImage = new Image(ResourceLocator.url("lib/Logo/logo.png"));
         }
         
         ImageView logoImageView = new ImageView(logoImage);

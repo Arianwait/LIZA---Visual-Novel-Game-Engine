@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import kz.aws.game.utils.ResourceLocator;
 
 
 @SuppressWarnings("deprecation")
@@ -24,7 +25,7 @@ public class JsonParser  implements Serializable {
         AppSettings appSettings = new DefaultAppSettings();
 
         // явная UTF-8: кодировка платформы ломала кириллицу в теме/путях
-        try (Reader reader = Files.newBufferedReader(Path.of(filePath), StandardCharsets.UTF_8)) {
+        try (Reader reader = Files.newBufferedReader(ResourceLocator.resolve(filePath), StandardCharsets.UTF_8)) {
             Object obj = parser.parse(reader);
             JSONObject jsonObject = (JSONObject) obj;
             appSettings.updateSettings(jsonObject);

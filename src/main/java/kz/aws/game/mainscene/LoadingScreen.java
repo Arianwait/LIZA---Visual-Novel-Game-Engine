@@ -12,6 +12,7 @@ import javafx.scene.layout.VBox;
 import kz.aws.game.utils.AssetPreloader;
 import kz.aws.game.utils.MenuResourceCache;
 import kz.aws.game.utils.VirtualViewport;
+import kz.aws.game.utils.ResourceLocator;
 
 /**
  * Экран загрузки: логотип, прогресс-бар и статус. Показывается поверх
@@ -36,9 +37,9 @@ public class LoadingScreen {
         VBox content = new VBox(20);
         content.setAlignment(Pos.CENTER);
 
-        Image logoImage = MenuResourceCache.getImage("file:lib/Logo/logo.png");
+        Image logoImage = MenuResourceCache.getImage(ResourceLocator.url("lib/Logo/logo.png"));
         if (logoImage == null) {
-            logoImage = new Image("file:lib/Logo/logo.png");
+            logoImage = new Image(ResourceLocator.url("lib/Logo/logo.png"));
         }
         logoImageView = new ImageView(logoImage);
         logoImageView.setPreserveRatio(true);

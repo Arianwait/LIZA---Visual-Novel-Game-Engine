@@ -24,7 +24,7 @@ public class UiConfigParser {
         
         try {
             // Updated path to match structure: lib/config/UI/Buttons.xml
-            File xmlFile = new File("lib/config/UI/Buttons.xml");
+            File xmlFile = ResourceLocator.file("lib/config/UI/Buttons.xml");
             if (!xmlFile.exists()) {
                 System.err.println("UI Config not found: " + xmlFile.getAbsolutePath());
                 return;

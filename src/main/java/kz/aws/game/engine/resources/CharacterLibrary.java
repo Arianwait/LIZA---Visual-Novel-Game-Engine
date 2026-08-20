@@ -9,6 +9,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import kz.aws.game.utils.ResourceLocator;
 
 public class CharacterLibrary {
     // Map<CharacterName, Map<PoseName, FilePath>>
@@ -21,7 +22,7 @@ public class CharacterLibrary {
         if (initialized) return;
         
         try {
-            File xmlFile = new File("lib/Scene/Person.xml");
+            File xmlFile = ResourceLocator.file("lib/Scene/Person.xml");
             if (!xmlFile.exists()) {
                 System.err.println("Person.xml not found at " + xmlFile.getAbsolutePath());
                 return;

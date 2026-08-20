@@ -20,6 +20,7 @@ import kz.aws.game.panel.PanelRegistry;
 import kz.aws.game.utils.UiConfigParser;
 import kz.aws.game.utils.UiFactory;
 import kz.aws.game.utils.VirtualViewport;
+import kz.aws.game.utils.ResourceLocator;
 
 /**
  * FXML-контроллер панели настроек. Все размеры — в пикселях
@@ -53,7 +54,7 @@ public class SettingsMenuController extends VBox {
      */
     private void loadFxml() {
         try {
-            File fxmlFile = new File(FXML_PATH);
+            File fxmlFile = ResourceLocator.file(FXML_PATH);
             URL fxmlUrl = fxmlFile.toURI().toURL();
             FXMLLoader loader = new FXMLLoader(fxmlUrl);
             loader.setRoot(this);

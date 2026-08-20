@@ -17,6 +17,7 @@ import javafx.stage.Stage;
 import kz.aws.game.animation.ButtonAnimation;
 import kz.aws.game.dispatcher.GameDispatcher;
 import kz.aws.game.utils.VirtualViewport;
+import kz.aws.game.utils.ResourceLocator;
 
 @SuppressWarnings("deprecation")
 public class DefaultAppSettings implements AppSettings {
@@ -88,7 +89,7 @@ public class DefaultAppSettings implements AppSettings {
         JSONParser parser = new JSONParser();
         
         try (java.io.Reader reader = java.nio.file.Files.newBufferedReader(
-                java.nio.file.Path.of(filePath), java.nio.charset.StandardCharsets.UTF_8)) {
+                ResourceLocator.resolve(filePath), java.nio.charset.StandardCharsets.UTF_8)) {
             Object obj = parser.parse(reader);
             JSONObject jsonObject = (JSONObject) obj;
             this.updateSettings(jsonObject);

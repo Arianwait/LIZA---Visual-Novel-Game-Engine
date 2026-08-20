@@ -7,6 +7,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import kz.aws.game.utils.ResourceLocator;
 
 @SuppressWarnings("deprecation")
 public class JsonConfigWriter {
@@ -20,7 +21,7 @@ public class JsonConfigWriter {
         jsonObject.put("volumeValue", appSettings.getVolumeValue());
         jsonObject.put("uiTheme", appSettings.getUiTheme());
 
-        try (Writer writer = Files.newBufferedWriter(Path.of(filePath), StandardCharsets.UTF_8)) {
+        try (Writer writer = Files.newBufferedWriter(ResourceLocator.resolve(filePath), StandardCharsets.UTF_8)) {
             writer.write(jsonObject.toJSONString());
         } catch (IOException e) {
             System.err.println("Настройки не сохранены (" + filePath + "): " + e.getMessage());

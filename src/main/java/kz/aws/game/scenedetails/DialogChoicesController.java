@@ -18,6 +18,7 @@ import kz.aws.game.scenelist.SceneInfo;
 import kz.aws.game.utils.SceneSettingsParser;
 import kz.aws.game.utils.SceneSettingsParser.SceneSettings;
 import kz.aws.game.utils.VirtualViewport;
+import kz.aws.game.utils.ResourceLocator;
 
 /**
  * FXML-контроллер панели выбора в диалоге. Отображает варианты ответов
@@ -49,7 +50,7 @@ public class DialogChoicesController extends StackPane {
      */
     private void loadFxml() {
         try {
-            File fxmlFile = new File(FXML_PATH);
+            File fxmlFile = ResourceLocator.file(FXML_PATH);
             URL fxmlUrl = fxmlFile.toURI().toURL();
             FXMLLoader loader = new FXMLLoader(fxmlUrl);
             loader.setRoot(this);

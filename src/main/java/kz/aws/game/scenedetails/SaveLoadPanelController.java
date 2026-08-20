@@ -29,6 +29,7 @@ import kz.aws.game.scenelist.GameData;
 import kz.aws.game.scenelist.SceneBuilder;
 import kz.aws.game.scenelist.SceneInfo;
 import kz.aws.game.utils.VirtualViewport;
+import kz.aws.game.utils.ResourceLocator;
 
 /**
  * Единый FXML-контроллер для панелей сохранения и загрузки:
@@ -78,7 +79,7 @@ public class SaveLoadPanelController extends VBox {
      */
     private void loadFxml() {
         try {
-            File fxmlFile = new File(FXML_PATH);
+            File fxmlFile = ResourceLocator.file(FXML_PATH);
             URL fxmlUrl = fxmlFile.toURI().toURL();
             FXMLLoader loader = new FXMLLoader(fxmlUrl);
             loader.setRoot(this);

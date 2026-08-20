@@ -17,6 +17,7 @@ import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.buttonaction.ButtonActionRegistry;
 import kz.aws.game.scenelist.SceneInfo;
 import kz.aws.game.utils.VirtualViewport;
+import kz.aws.game.utils.ResourceLocator;
 
 /**
  * Overlay-меню паузы во время игры. Появляется поверх сцены
@@ -90,7 +91,7 @@ public class GamePauseMenuController extends StackPane {
      */
     private void loadFxml() {
         try {
-            File fxmlFile = new File(FXML_PATH);
+            File fxmlFile = ResourceLocator.file(FXML_PATH);
             URL fxmlUrl = fxmlFile.toURI().toURL();
             FXMLLoader loader = new FXMLLoader(fxmlUrl);
             loader.setRoot(this);

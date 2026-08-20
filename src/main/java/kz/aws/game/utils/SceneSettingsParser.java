@@ -18,7 +18,7 @@ public class SceneSettingsParser {
         if (initialized) return;
         
         try {
-            File xmlFile = new File("lib/config/UI/SceneSettings.xml");
+            File xmlFile = ResourceLocator.file("lib/config/UI/SceneSettings.xml");
             if (!xmlFile.exists()) {
                 System.err.println("SceneSettings config not found: " + xmlFile.getAbsolutePath());
                 // Используем значения по умолчанию

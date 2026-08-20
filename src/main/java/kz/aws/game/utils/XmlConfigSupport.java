@@ -27,7 +27,7 @@ public final class XmlConfigSupport {
      * @return документ или null, если файл отсутствует либо не разбирается
      */
     public static Document loadDocument(String path) {
-        File file = new File(path);
+        File file = ResourceLocator.file(path);
         if (!file.isFile()) {
             System.err.println("Конфигурация не найдена: " + path);
             return null;

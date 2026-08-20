@@ -43,7 +43,7 @@ public class MenuResourceCache {
                 }
                 loadImage(config.backgroundImagePath);
                 loadImage(config.tableImagePath);
-                loadImage("file:lib/Logo/logo.png");
+                loadImage(ResourceLocator.url("lib/Logo/logo.png"));
 
                 System.out.println("Menu resources preloaded successfully (Background Thread)");
             } catch (Exception e) {
