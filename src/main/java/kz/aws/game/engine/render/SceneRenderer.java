@@ -271,7 +271,7 @@ public class SceneRenderer {
      * Визуальные эффекты НЕ сбрасываются — они живут между кадрами
      * и выключаются только явной командой {@code stopEffect}/{@code clearEffects}.
      */
-    private void stopAllAnimations() {
+    public void stopAllAnimations() {
         for (Map.Entry<String, javafx.animation.Animation> entry : new HashMap<>(activeAnimations).entrySet()) {
             entry.getValue().stop();
             if (entry.getKey().endsWith("_fadeout")) {
