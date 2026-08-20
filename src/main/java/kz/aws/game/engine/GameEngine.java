@@ -7,11 +7,13 @@ import java.util.Map;
 import javafx.geometry.Pos;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
+import javafx.scene.media.MediaPlayer;
 import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.engine.model.HistoryStep;
 import kz.aws.game.engine.model.PuzzleCommand;
 import kz.aws.game.engine.model.AnimationCommand;
 import kz.aws.game.engine.model.SceneFrame;
+import kz.aws.game.engine.model.SoundCommand;
 import kz.aws.game.engine.model.StateCommand;
 import kz.aws.game.engine.model.StopEffectCommand;
 import kz.aws.game.engine.model.VisualEffectCommand;
@@ -25,6 +27,7 @@ import kz.aws.game.panel.PanelContext;
 import kz.aws.game.panel.PuzzleRegistry;
 import kz.aws.game.engine.model.ChoiceOption;
 import kz.aws.game.scenedetails.DialogChoicesController;
+import kz.aws.game.mainscene.TitresAnimation;
 import kz.aws.game.scenedetails.NameInputPane;
 import kz.aws.game.scenedetails.DialogPanel;
 import kz.aws.game.scenelist.GameData;
@@ -60,6 +63,8 @@ public class GameEngine {
     private SceneFrame lastDisplayed;
     /** Открытая панель выбора; null — панель не показана. */
     private DialogChoicesController activeChoicePane;
+    /** Кадр, на котором уже запускались титры — чтобы back/redo их не перезапускал. */
+    private String lastTitresFrameKey;
 
     // Дельта-трекинг истории: снимки пишутся только при изменении
     private Map<String, Object> lastSavedGameVars = null;
@@ -134,6 +139,7 @@ public class GameEngine {
         resetDeltaTracking();
         runtimeVisual = null;
         lastDisplayed = null;
+        lastTitresFrameKey = null;
         waitingForChoice = false;
         isFinished = false;
 
@@ -746,6 +752,8 @@ public class GameEngine {
      */
     private void showFrameExtras(SceneFrame frame, Runnable afterAll) {
         executeStateCommands(frame);
+        playFrameSound(frame);
+        startTitresIfRequested(frame);
         showInputDialogIfNeeded(frame, () -> {
             // Сначала рендерим кадр — фон и текст уже на месте
             if (afterAll != null) afterAll.run();
@@ -843,6 +851,64 @@ public class GameEngine {
     }
 
     /**
+     * Воспроизводит разовый звуковой эффект кадра: атрибут {@code sound}
+     * или legacy-команду {@code Scene:SoundEffect}. Звук играет и при
+     * повторном показе кадра (back/redo) — это эффект, а не состояние.
+     *
+     * @param frame текущий кадр
+     */
+    private void playFrameSound(SceneFrame frame) {
+        String path = resolveFrameSoundPath(frame);
+        if (path == null || path.isEmpty()) return;
+
+        AppSettings appSettings = SceneInfo.getAppSettings();
+        if (appSettings == null) return;
+
+        MediaPlayer player = SoundEffect.startSound(appSettings, path);
+        if (player != null) {
+            player.play();
+        }
+    }
+
+    /**
+     * Определяет путь к звуковому эффекту кадра.
+     *
+     * @param frame текущий кадр
+     * @return путь или null, если эффекта нет
+     */
+    private String resolveFrameSoundPath(SceneFrame frame) {
+        if (frame.getSoundPath() != null && !frame.getSoundPath().isEmpty()) {
+            return frame.getSoundPath();
+        }
+        if (frame.getEntryAnimations() == null) return null;
+        for (AnimationCommand command : frame.getEntryAnimations()) {
+            if (command instanceof SoundCommand sound) {
+                return sound.getSoundPath();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Запускает финальные титры, если кадр их требует.
+     * Повторный показ того же кадра (back/redo) титры не перезапускает.
+     *
+     * @param frame текущий кадр
+     */
+    private void startTitresIfRequested(SceneFrame frame) {
+        if (!frame.isStartTitres()) return;
+
+        String frameKey = currentSceneId + ":" + currentFrameIndex;
+        if (frameKey.equals(lastTitresFrameKey)) return;
+
+        AppSettings appSettings = SceneInfo.getAppSettings();
+        if (appSettings == null) return;
+
+        lastTitresFrameKey = frameKey;
+        new TitresAnimation().start(appSettings);
+    }
+
+    /**
      * Применяет команды изменения состояния кадра: флаги и репутацию.
      * До этого команды SetFlag/ReduceReputathion из сценария молча
      * игнорировались — их выполнял только удалённый legacy-путь.
@@ -869,6 +935,10 @@ public class GameEngine {
 
         if (command.getKind() == StateCommand.Kind.SET_FLAG) {
             SceneController.setFlag(target, Boolean.parseBoolean(command.getValue()));
+            return;
+        }
+        if (command.getKind() == StateCommand.Kind.SET_CHOICE) {
+            SceneController.setPlayerChoice(target, command.getValue());
             return;
         }
         applyReputationCommand(command, target);
@@ -1079,6 +1149,7 @@ public class GameEngine {
         resetDeltaTracking();
         runtimeVisual = null;
         lastDisplayed = null;
+        lastTitresFrameKey = null;
         waitingForChoice = false;
     }
 }

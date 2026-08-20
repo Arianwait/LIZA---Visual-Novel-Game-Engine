@@ -9,7 +9,7 @@ import java.util.Set;
 import org.reflections.Reflections;
 
 /**
- * Реестр игровых панелей. Аналог {@code GameActionRegistry}.
+ * Реестр игровых панелей. Аналог {@code ButtonActionRegistry}.
  *
  * <p>Автоматически находит все классы в пакете {@code kz.aws.game.panel},
  * помеченные {@link GamePanel @GamePanel} и наследующие {@link BaseGamePanel}.

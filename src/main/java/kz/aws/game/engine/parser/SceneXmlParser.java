@@ -21,6 +21,7 @@ import kz.aws.game.engine.model.CloseEyesEffectCommand;
 import kz.aws.game.engine.model.ColorFilterEffectCommand;
 import kz.aws.game.engine.model.PuzzleCommand;
 import kz.aws.game.engine.model.ShakeEffectCommand;
+import kz.aws.game.engine.model.SoundCommand;
 import kz.aws.game.engine.model.StateCommand;
 import kz.aws.game.engine.model.ChoiceOption;
 import kz.aws.game.engine.model.SceneFrame;
@@ -191,6 +192,7 @@ public class SceneXmlParser {
                 }
                 String style = charElement.getAttribute("style"); // Read style attribute
                 String voice = charElement.getAttribute("voice"); // Read voice attribute
+                String sound = charElement.getAttribute("sound"); // Разовый звуковой эффект
                 String overlayAttr = charElement.getAttribute("overlay");
                 TextParseResult parsed = getTextContentWithClues(charElement);
 
@@ -201,12 +203,16 @@ public class SceneXmlParser {
                 frame.setSpeakerColor(color);
                 frame.setTextStyle(style); // Set style
                 frame.setVoicePath(voice); // Set voice path
+                if (sound != null && !sound.trim().isEmpty()) {
+                    frame.setSoundPath(sound.trim());
+                }
                 if (overlayAttr != null && !overlayAttr.trim().isEmpty()) {
                     frame.setOverlayText(overlayAttr.trim());
                     applyDarkBackgroundForOverlay(frame);
                 }
                 parseInputRequest(charElement, frame);
                 parseThemeSwitch(charElement, frame);
+                parseTitresCommand(charElement, frame);
                 parseChoices(charElement, frame);
                 frame.setEntryAnimations(stepAnimations);
                 frame.setNextSceneId(nextSceneId);
@@ -243,6 +249,26 @@ public class SceneXmlParser {
             frame.setInputRequestKey(key.trim());
             frame.setInputRequestPrompt(prompt != null && !prompt.isEmpty() ? prompt.trim() : "Введите значение:");
             break;
+        }
+    }
+
+    /**
+     * Ищет команду запуска финальных титров:
+     * {@code <command type="titres"/>} или {@code action="startTitres"}.
+     *
+     * @param charElement элемент персонажа
+     * @param frame       кадр, на котором отмечается запуск титров
+     */
+    private static void parseTitresCommand(Element charElement, SceneFrame frame) {
+        NodeList cmdList = charElement.getElementsByTagName("command");
+        for (int k = 0; k < cmdList.getLength(); k++) {
+            Element cmd = (Element) cmdList.item(k);
+            String action = cmd.getAttribute("action");
+            if ("titres".equals(cmd.getAttribute("type"))
+                    || "startTitres".equals(action) || "StartTitries".equals(action)) {
+                frame.setStartTitres(true);
+                return;
+            }
         }
     }
 
@@ -373,10 +399,46 @@ public class SceneXmlParser {
             case "SetReputation" -> StateCommand.Kind.SET_REPUTATION;
             case "AppendReputation", "AppendReputathion" -> StateCommand.Kind.ADD_REPUTATION;
             case "ReduceReputation", "ReduceReputathion" -> StateCommand.Kind.REDUCE_REPUTATION;
+            case "SetChoice" -> StateCommand.Kind.SET_CHOICE;
             default -> null;
         };
         if (kind == null) return null;
         return new StateCommand(kind, target, value);
+    }
+
+    /**
+     * Создаёт команду состояния из legacy-синтаксиса {@code target:action:value[:extra]}.
+     * Для {@code System:SetChoice:ключ:значение} значение лежит в четвёртой части.
+     *
+     * @param parts  разбитая по ':' команда
+     * @param target первая часть команды
+     * @param action имя действия
+     * @param value  третья часть команды
+     * @return команда состояния или null
+     */
+    private static AnimationCommand createLegacyStateCommand(String[] parts, String target,
+                                                             String action, String value) {
+        if ("SetChoice".equals(action)) {
+            return parts.length > 3 ? new StateCommand(StateCommand.Kind.SET_CHOICE, value, parts[3]) : null;
+        }
+        if ("SetFlag".equals(action)) {
+            return parts.length > 3 ? new StateCommand(StateCommand.Kind.SET_FLAG, value, parts[3]) : null;
+        }
+        if ("System".equals(target)) return null;
+        // репутационные команды: цель — имя персонажа в первой части
+        return createStateCommand(action, target, value);
+    }
+
+    /**
+     * Склеивает части команды обратно через ':' начиная с указанного индекса.
+     *
+     * @param parts частей команды
+     * @param from  индекс первой склеиваемой части
+     * @return склеенная строка (пустая, если частей нет)
+     */
+    private static String joinFrom(String[] parts, int from) {
+        if (parts.length <= from) return "";
+        return String.join(":", java.util.Arrays.copyOfRange(parts, from, parts.length));
     }
 
     private static void parseLegacyCommand(String cmdText, VisualState state, List<AnimationCommand> anims) {
@@ -387,6 +449,16 @@ public class SceneXmlParser {
         String action = parts[1];
         String value = parts.length > 2 ? parts[2] : "";
 
+        AnimationCommand legacyState = createLegacyStateCommand(parts, target, action, value);
+        if (legacyState != null) {
+            anims.add(legacyState);
+            return;
+        }
+        if ("Scene".equals(target) && "SoundEffect".equals(action)) {
+            // путь может содержать ':' (диск), поэтому склеиваем остаток
+            anims.add(new SoundCommand(joinFrom(parts, 2)));
+            return;
+        }
         if ("background".equals(target) && "changebackground".equals(action)) {
             state.setBackgroundPath(value);
         } else if ("showPerson".equals(action)) {

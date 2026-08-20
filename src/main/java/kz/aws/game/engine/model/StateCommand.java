@@ -23,7 +23,9 @@ public class StateCommand implements AnimationCommand {
         /** Увеличить репутацию персонажа. */
         ADD_REPUTATION,
         /** Уменьшить репутацию персонажа. */
-        REDUCE_REPUTATION
+        REDUCE_REPUTATION,
+        /** Записать выбор игрока (улику, ответ) в playerChoices. */
+        SET_CHOICE
     }
 
     private final Kind kind;
