@@ -6,7 +6,10 @@ import javafx.stage.Stage;
 import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.engine.render.SceneRenderer;
 import kz.aws.game.panel.PanelRegistry;
+import kz.aws.game.scenedetails.DialogPanelController;
+import kz.aws.game.scenedetails.GamePauseMenuController;
 import kz.aws.game.scenelist.SceneInfo;
+import kz.aws.game.soundtrack.SoundEffect;
 import kz.aws.game.soundtrack.Soundtrack;
 import kz.aws.game.utils.MainMenuConfigParser;
 import kz.aws.game.utils.MenuResourceCache;
@@ -27,6 +30,7 @@ public class ShowMainMenu {
         appSettings.getRoot().setOnMouseClicked(null);
         primaryStage = appSettings.getStagePain();
 
+        leaveGameSession();
         SceneRenderer.clearSceneCache();
         ThemesConfigParser.applyMenuBackgroundToRoot(appSettings);
 
@@ -51,5 +55,17 @@ public class ShowMainMenu {
 
         primaryStage.setScene(appSettings.getScene());
         primaryStage.setFullScreen(appSettings.isFullscreen());
+    }
+
+    /**
+     * Снимает следы игровой сессии перед показом меню: игровые хоткеи,
+     * звуковые эффекты и статическое состояние меню паузы.
+     * Иначе в меню Esc открывал игровую паузу, Tab — журнал,
+     * а длинный SFX продолжал играть поверх музыки меню.
+     */
+    private static void leaveGameSession() {
+        DialogPanelController.removeHotkeys();
+        GamePauseMenuController.resetState();
+        SoundEffect.stopAll();
     }
 }

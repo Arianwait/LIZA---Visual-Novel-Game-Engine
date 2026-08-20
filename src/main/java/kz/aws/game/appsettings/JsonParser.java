@@ -4,9 +4,12 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 
 @SuppressWarnings("deprecation")
@@ -20,13 +23,14 @@ public class JsonParser  implements Serializable {
         JSONParser parser = new JSONParser();
         AppSettings appSettings = new DefaultAppSettings();
 
-        try (FileReader reader = new FileReader(filePath)) {
+        // явная UTF-8: кодировка платформы ломала кириллицу в теме/путях
+        try (Reader reader = Files.newBufferedReader(Path.of(filePath), StandardCharsets.UTF_8)) {
             Object obj = parser.parse(reader);
             JSONObject jsonObject = (JSONObject) obj;
             appSettings.updateSettings(jsonObject);
-        } catch (IOException | ParseException e) {
-            e.printStackTrace();
-            // Обработка ошибок при чтении JSON
+        } catch (IOException | ParseException | RuntimeException e) {
+            System.err.println("Настройки не прочитаны (" + filePath + "): " + e.getMessage()
+                    + " — используются значения по умолчанию");
         }
 
         return appSettings;

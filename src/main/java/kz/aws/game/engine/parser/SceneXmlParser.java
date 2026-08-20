@@ -21,6 +21,7 @@ import kz.aws.game.engine.model.CloseEyesEffectCommand;
 import kz.aws.game.engine.model.ColorFilterEffectCommand;
 import kz.aws.game.engine.model.PuzzleCommand;
 import kz.aws.game.engine.model.ShakeEffectCommand;
+import kz.aws.game.engine.model.StateCommand;
 import kz.aws.game.engine.model.ChoiceOption;
 import kz.aws.game.engine.model.SceneFrame;
 import kz.aws.game.engine.model.StopEffectCommand;
@@ -42,12 +43,31 @@ public class SceneXmlParser {
     private static final String LEGACY_SCENARIO_PATH = "lib/Scene/Dialog.xml";
 
     /**
+     * Путь к используемому файлу сценария: основной, если он есть, иначе запасной.
+     *
+     * @return путь к XML-файлу сценария
+     */
+    public static String getScenarioPath() {
+        return new File(SCENARIO_PATH).exists() ? SCENARIO_PATH : LEGACY_SCENARIO_PATH;
+    }
+
+    /**
      * Загружает и разбирает все сцены сценария.
      *
      * @return карта id сцены → кадры; пустая, если файл не найден или нечитаем
      */
     public static Map<Integer, List<SceneFrame>> parseAllScenes() {
-        Document doc = loadScenarioDocument();
+        return parseScenesFrom(getScenarioPath());
+    }
+
+    /**
+     * Разбирает сцены из указанного файла сценария.
+     *
+     * @param scenarioPath путь к XML-файлу
+     * @return карта id сцены → кадры; пустая, если файл не найден или нечитаем
+     */
+    public static Map<Integer, List<SceneFrame>> parseScenesFrom(String scenarioPath) {
+        Document doc = loadScenarioDocument(scenarioPath);
         if (doc == null) return new HashMap<>();
 
         Map<Integer, List<SceneFrame>> allScenes = new HashMap<>();
@@ -89,17 +109,15 @@ public class SceneXmlParser {
     }
 
     /**
-     * Загружает XML-документ сценария (основной файл или запасной).
+     * Загружает XML-документ сценария.
      *
+     * @param scenarioPath путь к файлу сценария
      * @return документ или null, если файл отсутствует либо не разбирается
      */
-    private static Document loadScenarioDocument() {
-        File xmlFile = new File(SCENARIO_PATH);
+    private static Document loadScenarioDocument(String scenarioPath) {
+        File xmlFile = new File(scenarioPath);
         if (!xmlFile.exists()) {
-            xmlFile = new File(LEGACY_SCENARIO_PATH);
-        }
-        if (!xmlFile.exists()) {
-            System.err.println("Файл сценария не найден: " + SCENARIO_PATH);
+            System.err.println("Файл сценария не найден: " + scenarioPath);
             return null;
         }
         try {
@@ -329,11 +347,36 @@ public class SceneXmlParser {
                      CharacterState charState = currentState.getCharacter(target);
                      charState.setPosition(Position.CENTER);
                      currentState.updateCharacter(target, charState);
+                 } else {
+                     AnimationCommand stateCmd = createStateCommand(action, target, value);
+                     if (stateCmd != null) anims.add(stateCmd);
                  }
              }
         }
 
         return anims;
+    }
+
+    /**
+     * Создаёт команду изменения состояния (флаг/репутация) по имени действия.
+     * Имена соответствуют историческим командам сценария, включая опечатку
+     * {@code ReduceReputathion} — она встречается в существующих сценариях.
+     *
+     * @param action имя действия из XML
+     * @param target имя флага или персонажа
+     * @param value  значение команды
+     * @return команда или null, если действие неизвестно
+     */
+    private static AnimationCommand createStateCommand(String action, String target, String value) {
+        StateCommand.Kind kind = switch (action) {
+            case "SetFlag" -> StateCommand.Kind.SET_FLAG;
+            case "SetReputation" -> StateCommand.Kind.SET_REPUTATION;
+            case "AppendReputation", "AppendReputathion" -> StateCommand.Kind.ADD_REPUTATION;
+            case "ReduceReputation", "ReduceReputathion" -> StateCommand.Kind.REDUCE_REPUTATION;
+            default -> null;
+        };
+        if (kind == null) return null;
+        return new StateCommand(kind, target, value);
     }
 
     private static void parseLegacyCommand(String cmdText, VisualState state, List<AnimationCommand> anims) {

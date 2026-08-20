@@ -66,6 +66,16 @@ public class GamePauseMenuController extends StackPane {
     }
 
     /**
+     * Сбрасывает статическое состояние меню паузы без обращения к графу сцены.
+     * Нужен, когда root пересоздаётся мимо close() (загрузка сейва, выход
+     * в главное меню) — иначе флаг opened оставался true и Esc переставал работать.
+     */
+    public static void resetState() {
+        opened = false;
+        currentInstance = null;
+    }
+
+    /**
      * Создаёт контроллер меню паузы.
      *
      * @param appSettings настройки приложения

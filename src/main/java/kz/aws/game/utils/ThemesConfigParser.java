@@ -1,6 +1,5 @@
 package kz.aws.game.utils;
 
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,11 +63,10 @@ public class ThemesConfigParser {
         if (initialized && cachedThemes != null) {
             return new ArrayList<>(cachedThemes);
         }
-        try {
-            FileReader reader = new FileReader(CONFIG_PATH);
+        try (java.io.Reader reader = java.nio.file.Files.newBufferedReader(
+                java.nio.file.Path.of(CONFIG_PATH), java.nio.charset.StandardCharsets.UTF_8)) {
             JSONParser parser = new JSONParser();
             Object obj = parser.parse(reader);
-            reader.close();
             JSONObject root = (JSONObject) obj;
             Object themesObj = root.get("themes");
             if (!(themesObj instanceof JSONArray)) {

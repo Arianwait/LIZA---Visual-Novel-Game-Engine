@@ -1,7 +1,5 @@
 package kz.aws.game.mainscene;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 
 import javafx.animation.TranslateTransition;
@@ -29,15 +27,10 @@ public class TitresAnimation{
         appSettings.getRoot().getChildren().add(titres);
 
         try {
-            // Чтение текста из файла
-            BufferedReader reader = new BufferedReader(new FileReader("lib/titries.txt"));
-            StringBuilder content = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                content.append(line).append("\n");
-            }
-            reader.close();
-            titres.setText(content.toString());
+            // Чтение текста из файла (UTF-8: титры на русском)
+            titres.setText(java.nio.file.Files.readString(
+                    java.nio.file.Path.of("lib/titries.txt"),
+                    java.nio.charset.StandardCharsets.UTF_8));
 
             // Создание анимации для титров с задержкой и увеличенной продолжительностью
             TranslateTransition transition = new TranslateTransition(Duration.seconds(12), titres); // Продолжительность анимации увеличена до 6 секунд

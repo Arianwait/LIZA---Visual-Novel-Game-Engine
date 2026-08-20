@@ -99,7 +99,8 @@ public class DialogTreePane {
         scroll.setFitToWidth(true);
         scroll.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
         scroll.setPrefHeight(VirtualViewport.height(0.5));
-        scroll.setVvalue(1.0);
+        // после layout: до него высота контента ещё 0 и прокрутка не применяется
+        javafx.application.Platform.runLater(() -> scroll.setVvalue(1.0));
         return scroll;
     }
 

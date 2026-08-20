@@ -171,8 +171,10 @@ public class DialogPanelController implements DialogPanel {
      * Снимает ранее установленный фильтр хоткеев.
      * Панель диалога пересоздаётся при загрузке сейва и выходе в меню —
      * без снятия фильтры накапливались и Esc/Tab срабатывали многократно.
+     * Вызывается также при выходе из игры, иначе игровые хоткеи продолжали
+     * работать в главном меню.
      */
-    private void removeHotkeys() {
+    public static void removeHotkeys() {
         if (hotkeyScene == null || hotkeyFilter == null) return;
         hotkeyScene.removeEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, hotkeyFilter);
         hotkeyScene = null;

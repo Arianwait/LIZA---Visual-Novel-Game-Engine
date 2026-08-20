@@ -16,7 +16,50 @@ import kz.aws.game.engine.model.SceneFrame;
  */
 public final class ScenarioValidator {
 
+    /** Команды character-типа, которые понимает парсер сцен. */
+    private static final java.util.Set<String> KNOWN_CHARACTER_ACTIONS = java.util.Set.of(
+            "showPerson", "removeFromScene", "move_Left", "move_Right", "move_Center",
+            "SetFlag", "SetReputation",
+            "AppendReputation", "AppendReputathion",
+            "ReduceReputation", "ReduceReputathion");
+
     private ScenarioValidator() {
+    }
+
+    /**
+     * Проверяет XML-сценарий на команды, которые парсер молча проигнорирует.
+     * Нужно после удаления старых экшенов (setFrom*, runTo*, AppendReputation):
+     * такие команды в существующих сценариях не выполняются и не сообщают об этом.
+     *
+     * @param scenarioPath путь к XML-файлу сценария
+     * @return список сообщений о неизвестных командах
+     */
+    public static List<String> validateCommands(String scenarioPath) {
+        List<String> problems = new ArrayList<>();
+        org.w3c.dom.Document doc = kz.aws.game.utils.XmlConfigSupport.loadDocument(scenarioPath);
+        if (doc == null) return problems;
+
+        org.w3c.dom.NodeList commands = doc.getElementsByTagName("command");
+        for (int i = 0; i < commands.getLength(); i++) {
+            checkCommandElement((org.w3c.dom.Element) commands.item(i), problems);
+        }
+        return problems;
+    }
+
+    /**
+     * Проверяет один элемент {@code <command>} на понятность парсеру.
+     *
+     * @param cmd      элемент команды
+     * @param problems накопитель сообщений
+     */
+    private static void checkCommandElement(org.w3c.dom.Element cmd, List<String> problems) {
+        if (!"character".equals(cmd.getAttribute("type"))) return;
+
+        String action = cmd.getAttribute("action");
+        if (action == null || action.isEmpty() || KNOWN_CHARACTER_ACTIONS.contains(action)) return;
+
+        problems.add("Команда character action=\"" + action + "\" (target="
+                + cmd.getAttribute("target") + ") не поддерживается — будет проигнорирована");
     }
 
     /**
