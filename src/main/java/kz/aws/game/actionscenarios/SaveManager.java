@@ -12,7 +12,7 @@ import kz.aws.game.scenelist.GameData;
 /**
  * Сохранение и загрузка игры через Java-сериализацию в папку {@value #SAVE_DIRECTORY}.
  */
-public class SaveManadger {
+public class SaveManager {
 
     /** Папка с файлами сохранений (относительно рабочей директории). */
     public static final String SAVE_DIRECTORY = "save";

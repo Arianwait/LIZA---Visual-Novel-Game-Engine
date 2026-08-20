@@ -19,7 +19,7 @@ public class SceneFrame implements Serializable {
     /** Разовый звуковой эффект кадра (дверь, выстрел); null — без эффекта. */
     private String soundPath;
     /** Запустить финальные титры при показе кадра. */
-    private boolean startTitres;
+    private boolean startTitles;
     /** Текст для полноэкранного затемнения (DimOverlay); null — без overlay. */
     private String overlayText;
     /** Ключ переменной для запроса ввода (имя игрока и др.); null — без запроса. */
@@ -41,8 +41,8 @@ public class SceneFrame implements Serializable {
     public void setSoundPath(String soundPath) { this.soundPath = soundPath; }
 
     /** true — при показе кадра запускаются финальные титры. */
-    public boolean isStartTitres() { return startTitres; }
-    public void setStartTitres(boolean startTitres) { this.startTitres = startTitres; }
+    public boolean isStartTitles() { return startTitles; }
+    public void setStartTitles(boolean startTitles) { this.startTitles = startTitles; }
     
     private List<ClueData> clues;
     private List<ChoiceOption> choices;
@@ -103,7 +103,7 @@ public class SceneFrame implements Serializable {
         copy.textStyle = textStyle;
         copy.voicePath = voicePath;
         copy.soundPath = soundPath;
-        copy.startTitres = startTitres;
+        copy.startTitles = startTitles;
         copy.overlayText = overlayText;
         copy.inputRequestKey = inputRequestKey;
         copy.inputRequestPrompt = inputRequestPrompt;

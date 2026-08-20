@@ -14,7 +14,7 @@ import kz.aws.game.utils.VirtualViewport;
  * Финальные титры: текст из lib/titries.txt проезжает по экрану снизу вверх,
  * после чего открывается главное меню.
  */
-public class TitresAnimation{
+public class TitlesAnimation{
 
     /**
      * Запускает анимацию титров.
@@ -49,6 +49,6 @@ public class TitresAnimation{
             e.printStackTrace();
         }
         
-        appSettings.getStagePain().show();
+        appSettings.getStage().show();
     }
 }

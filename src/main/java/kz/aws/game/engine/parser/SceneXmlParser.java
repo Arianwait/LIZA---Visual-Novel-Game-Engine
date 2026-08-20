@@ -254,7 +254,7 @@ public class SceneXmlParser {
 
     /**
      * Ищет команду запуска финальных титров:
-     * {@code <command type="titres"/>} или {@code action="startTitres"}.
+     * {@code <command type="titres"/>} или {@code action="startTitles"}.
      *
      * @param charElement элемент персонажа
      * @param frame       кадр, на котором отмечается запуск титров
@@ -264,9 +264,12 @@ public class SceneXmlParser {
         for (int k = 0; k < cmdList.getLength(); k++) {
             Element cmd = (Element) cmdList.item(k);
             String action = cmd.getAttribute("action");
+            // историческое написание StartTitries сохранено: так пишут
+            // существующие сценарии
             if ("titres".equals(cmd.getAttribute("type"))
-                    || "startTitres".equals(action) || "StartTitries".equals(action)) {
-                frame.setStartTitres(true);
+                    || "startTitles".equals(action)
+                    || "StartTitres".equals(action) || "StartTitries".equals(action)) {
+                frame.setStartTitles(true);
                 return;
             }
         }
@@ -386,7 +389,7 @@ public class SceneXmlParser {
     /**
      * Создаёт команду изменения состояния (флаг/репутация) по имени действия.
      * Имена соответствуют историческим командам сценария, включая опечатку
-     * {@code ReduceReputathion} — она встречается в существующих сценариях.
+     * {@code ReduceReputation} — она встречается в существующих сценариях.
      *
      * @param action имя действия из XML
      * @param target имя флага или персонажа
@@ -397,6 +400,8 @@ public class SceneXmlParser {
         StateCommand.Kind kind = switch (action) {
             case "SetFlag" -> StateCommand.Kind.SET_FLAG;
             case "SetReputation" -> StateCommand.Kind.SET_REPUTATION;
+            // опечатки *Reputathion сохранены намеренно: так написано
+            // в существующих сценариях, переименование сломало бы их
             case "AppendReputation", "AppendReputathion" -> StateCommand.Kind.ADD_REPUTATION;
             case "ReduceReputation", "ReduceReputathion" -> StateCommand.Kind.REDUCE_REPUTATION;
             case "SetChoice" -> StateCommand.Kind.SET_CHOICE;

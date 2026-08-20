@@ -197,7 +197,7 @@ public class SettingsMenuController extends VBox {
      * Применяет размер окна или полноэкранный режим к Stage.
      */
     private void applyStageSize() {
-        Stage stage = appSettings.getStagePain();
+        Stage stage = appSettings.getStage();
         boolean wasFullscreen = stage.isFullScreen();
         stage.setFullScreen(appSettings.isFullscreen());
         if (!appSettings.isFullscreen()) {

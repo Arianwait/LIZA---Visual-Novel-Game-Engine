@@ -1,4 +1,4 @@
-package kz.aws.game.panel.puzzle.puzzelpanel;
+package kz.aws.game.panel.puzzle.puzzlepanel;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

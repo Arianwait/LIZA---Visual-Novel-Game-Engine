@@ -27,7 +27,7 @@ import kz.aws.game.panel.PanelContext;
 import kz.aws.game.panel.PuzzleRegistry;
 import kz.aws.game.engine.model.ChoiceOption;
 import kz.aws.game.scenedetails.DialogChoicesController;
-import kz.aws.game.mainscene.TitresAnimation;
+import kz.aws.game.mainscene.TitlesAnimation;
 import kz.aws.game.scenedetails.NameInputPane;
 import kz.aws.game.scenedetails.DialogPanel;
 import kz.aws.game.scenelist.GameData;
@@ -64,7 +64,7 @@ public class GameEngine {
     /** Открытая панель выбора; null — панель не показана. */
     private DialogChoicesController activeChoicePane;
     /** Кадр, на котором уже запускались титры — чтобы back/redo их не перезапускал. */
-    private String lastTitresFrameKey;
+    private String lastTitlesFrameKey;
 
     // Дельта-трекинг истории: снимки пишутся только при изменении
     private Map<String, Object> lastSavedGameVars = null;
@@ -139,7 +139,7 @@ public class GameEngine {
         resetDeltaTracking();
         runtimeVisual = null;
         lastDisplayed = null;
-        lastTitresFrameKey = null;
+        lastTitlesFrameKey = null;
         waitingForChoice = false;
         isFinished = false;
 
@@ -376,7 +376,7 @@ public class GameEngine {
     private void renderDisplay(SceneFrame display, boolean animate) {
         renderer.renderFrame(display, animate ? lastDisplayed : null, animate);
         lastDisplayed = display;
-        SceneInfo.setCliker(currentFrameIndex);
+        SceneInfo.setClicker(currentFrameIndex);
     }
 
     /**
@@ -753,7 +753,7 @@ public class GameEngine {
     private void showFrameExtras(SceneFrame frame, Runnable afterAll) {
         executeStateCommands(frame);
         playFrameSound(frame);
-        startTitresIfRequested(frame);
+        startTitlesIfRequested(frame);
         showInputDialogIfNeeded(frame, () -> {
             // Сначала рендерим кадр — фон и текст уже на месте
             if (afterAll != null) afterAll.run();
@@ -895,22 +895,22 @@ public class GameEngine {
      *
      * @param frame текущий кадр
      */
-    private void startTitresIfRequested(SceneFrame frame) {
-        if (!frame.isStartTitres()) return;
+    private void startTitlesIfRequested(SceneFrame frame) {
+        if (!frame.isStartTitles()) return;
 
         String frameKey = currentSceneId + ":" + currentFrameIndex;
-        if (frameKey.equals(lastTitresFrameKey)) return;
+        if (frameKey.equals(lastTitlesFrameKey)) return;
 
         AppSettings appSettings = SceneInfo.getAppSettings();
         if (appSettings == null) return;
 
-        lastTitresFrameKey = frameKey;
-        new TitresAnimation().start(appSettings);
+        lastTitlesFrameKey = frameKey;
+        new TitlesAnimation().start(appSettings);
     }
 
     /**
      * Применяет команды изменения состояния кадра: флаги и репутацию.
-     * До этого команды SetFlag/ReduceReputathion из сценария молча
+     * До этого команды SetFlag/ReduceReputation из сценария молча
      * игнорировались — их выполнял только удалённый legacy-путь.
      *
      * @param frame текущий кадр
@@ -1091,7 +1091,7 @@ public class GameEngine {
      * @param enabled true — навигация доступна
      */
     private void setDialogNavigationEnabled(boolean enabled) {
-        DialogPanel dialog = SceneInfo.getTableDatail();
+        DialogPanel dialog = SceneInfo.getDialogPanel();
         if (dialog != null) {
             dialog.setNavigationEnabled(enabled);
         }
@@ -1149,7 +1149,7 @@ public class GameEngine {
         resetDeltaTracking();
         runtimeVisual = null;
         lastDisplayed = null;
-        lastTitresFrameKey = null;
+        lastTitlesFrameKey = null;
         waitingForChoice = false;
     }
 }

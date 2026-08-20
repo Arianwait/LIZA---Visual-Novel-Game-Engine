@@ -7,7 +7,7 @@ package kz.aws.game.engine.model;
  * <p>Разбирается {@code SceneXmlParser} из команд вида:
  * <pre>
  *   &lt;command type="character" action="SetFlag" target="knows_fact" value="true"/&gt;
- *   &lt;command type="character" action="ReduceReputathion" target="Маркус" value="10"/&gt;
+ *   &lt;command type="character" action="ReduceReputation" target="Маркус" value="10"/&gt;
  * </pre>
  */
 public class StateCommand implements AnimationCommand {

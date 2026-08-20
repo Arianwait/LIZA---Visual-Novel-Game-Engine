@@ -6,7 +6,7 @@ import javafx.event.EventHandler;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import kz.aws.game.actionscenarios.SaveManadger;
+import kz.aws.game.actionscenarios.SaveManager;
 import kz.aws.game.actionscenarios.ShowMainMenu;
 import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.engine.GameEngine;
@@ -69,7 +69,7 @@ public class SceneBuilder extends VBox implements Serializable {
     private DialogPanel createDialogPanel(AppSettings appSettings, StackPane root) {
         DialogPanel panel = DialogPanelFactory.create(appSettings, appSettings.getScene());
         panel.addToScene(root);
-        SceneInfo.setTableDatail(panel);
+        SceneInfo.setDialogPanel(panel);
         return panel;
     }
 
@@ -106,7 +106,7 @@ public class SceneBuilder extends VBox implements Serializable {
      */
     private GameData loadSaveData(String saveFilePath) {
         if (saveFilePath == null) return null;
-        return SaveManadger.deserializeClicker(saveFilePath);
+        return SaveManager.deserializeClicker(saveFilePath);
     }
 
     /**
@@ -164,7 +164,7 @@ public class SceneBuilder extends VBox implements Serializable {
         mouseClickHandler = event -> handleMouseClick(appSettings, event);
 
         SceneInfo.setEventHandler(mouseClickHandler);
-        SceneInfo.setEventBack(event -> gameEngine.back());
+        SceneInfo.setBackHandler(event -> gameEngine.back());
         SceneInfo.enableEventHandler(root);
     }
 

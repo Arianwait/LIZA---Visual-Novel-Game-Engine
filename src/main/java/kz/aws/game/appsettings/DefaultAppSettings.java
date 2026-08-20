@@ -15,7 +15,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
 import kz.aws.game.animation.ButtonAnimation;
-import kz.aws.game.dispetcher.GameDispetcher;
+import kz.aws.game.dispatcher.GameDispatcher;
 import kz.aws.game.utils.VirtualViewport;
 
 @SuppressWarnings("deprecation")
@@ -29,11 +29,11 @@ public class DefaultAppSettings implements AppSettings {
     private static final int DEFAULT_WINDOW_HEIGHT = 720;
     private int windowWidth = DEFAULT_WINDOW_WIDTH;
     private int windowHeight = DEFAULT_WINDOW_HEIGHT;
-    private Double volumValue = 0.1;
+    private Double volumeValue = 0.1;
     private boolean fullscreen;
     private String uiTheme = DEFAULT_UI_THEME;
     private Stage primaryStage;
-    private GameDispetcher gameDispetcher;
+    private GameDispatcher gameDispetcher;
     private Scene scene;
     private StackPane root;
     private MediaPlayer mediaPlayer;
@@ -54,12 +54,12 @@ public class DefaultAppSettings implements AppSettings {
 
     @Override
     public Double getVolumeValue() {
-        return volumValue;
+        return volumeValue;
     }
 
     @Override
-    public void setVolumeValue(Double volumValue) {
-        this.volumValue = volumValue;
+    public void setVolumeValue(Double volumeValue) {
+        this.volumeValue = volumeValue;
     }
     
     @Override
@@ -108,24 +108,24 @@ public class DefaultAppSettings implements AppSettings {
     }
 
 	@Override
-	public void setStagePain(Stage primaryStage) {
+	public void setStage(Stage primaryStage) {
 		this.primaryStage = primaryStage;
 		
 	}
 
 	@Override
-	public void setGamedispetcher(GameDispetcher gameDispetcher) {
+	public void setGamedispetcher(GameDispatcher gameDispetcher) {
 		this.gameDispetcher = gameDispetcher;
 		
 	}
 
 	@Override
-	public Stage getStagePain() {
+	public Stage getStage() {
 		return primaryStage;
 	}
 
 	@Override
-	public GameDispetcher getGamedispetcher() {
+	public GameDispatcher getGamedispetcher() {
 		return gameDispetcher;
 	}
 

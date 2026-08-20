@@ -159,7 +159,7 @@ class SceneXmlParserTest {
                   <dialog id="1">
                     <character name="Маркус">
                       <command type="character" action="SetFlag" target="knows_fact" value="true"/>
-                      <command type="character" action="ReduceReputathion" target="Маркус" value="10"/>
+                      <command type="character" action="ReduceReputation" target="Маркус" value="10"/>
                       Реплика
                     </character>
                   </dialog>

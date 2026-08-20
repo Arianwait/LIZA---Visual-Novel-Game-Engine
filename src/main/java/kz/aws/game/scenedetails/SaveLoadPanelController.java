@@ -18,7 +18,7 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import kz.aws.game.actionscenarios.SaveManadger;
+import kz.aws.game.actionscenarios.SaveManager;
 import kz.aws.game.animation.AnimationUtils;
 import kz.aws.game.animation.ButtonAnimation;
 import kz.aws.game.appsettings.AppSettings;
@@ -321,7 +321,7 @@ public class SaveLoadPanelController extends VBox {
         String dateTime = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
         String saveFileName = slotIndex + "_" + gameData.getCurrentSceneId() + "_" + dateTime + ".ser";
 
-        if (!SaveManadger.serializeClicker(gameData, saveFileName)) {
+        if (!SaveManager.serializeClicker(gameData, saveFileName)) {
             showSaveFailed();
             return;
         }

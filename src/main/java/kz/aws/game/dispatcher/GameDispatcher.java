@@ -1,4 +1,4 @@
-package kz.aws.game.dispetcher;
+package kz.aws.game.dispatcher;
 
 import java.io.Serializable;
 import java.util.List;
@@ -22,7 +22,7 @@ import kz.aws.game.utils.VirtualViewport;
  * {@link VirtualViewport}: весь интерфейс живёт в контейнере фиксированного
  * дизайн-разрешения и масштабируется под реальный размер окна одним трансформом.
  */
-public class GameDispetcher extends Application implements Serializable {
+public class GameDispatcher extends Application implements Serializable {
 
 	private static final long serialVersionUID = 8222725889624267118L;
 
@@ -81,7 +81,7 @@ public class GameDispetcher extends Application implements Serializable {
 
 		AppSettings appSettings = JsonParser.readConfig();
 		appSettings.setGamedispetcher(this);
-		appSettings.setStagePain(primaryStage);
+		appSettings.setStage(primaryStage);
 
 		VirtualViewport viewport = new VirtualViewport();
 		appSettings.setRoot(viewport.getContentRoot());

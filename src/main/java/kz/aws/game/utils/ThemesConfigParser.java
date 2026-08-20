@@ -13,7 +13,7 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.StackPane;
 import kz.aws.game.appsettings.AppSettings;
-import kz.aws.game.background.BackgroundDisetche;
+import kz.aws.game.background.BackgroundDispatcher;
 
 /**
  * Парсер конфигурации тем интерфейса из JSON.
@@ -151,7 +151,7 @@ public class ThemesConfigParser {
         }
         if (path == null || path.isEmpty()) return;
         try {
-            BackgroundDisetche bgDispatch = new BackgroundDisetche();
+            BackgroundDispatcher bgDispatch = new BackgroundDispatcher();
             // Сначала пробуем взять уже загруженное изображение из кеша — тогда фон появляется сразу
             String pathWithFile = path.startsWith("file:") ? path : "file:" + path;
             Image cached = MenuResourceCache.getImage(pathWithFile);

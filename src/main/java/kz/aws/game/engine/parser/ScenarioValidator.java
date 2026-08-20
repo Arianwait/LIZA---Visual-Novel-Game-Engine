@@ -22,7 +22,7 @@ public final class ScenarioValidator {
             "SetFlag", "SetReputation", "SetChoice",
             "AppendReputation", "AppendReputathion",
             "ReduceReputation", "ReduceReputathion",
-            "startTitres", "StartTitries");
+            "startTitles", "StartTitres", "StartTitries");
 
     private ScenarioValidator() {
     }

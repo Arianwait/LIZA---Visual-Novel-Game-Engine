@@ -99,20 +99,21 @@ class MigratedFeaturesTest {
     @Test
     void titresCommandSetsFrameFlag() throws IOException {
         SceneFrame frame = parse(scenarioWith(
-                "<command type=\"character\" action=\"startTitres\"/>Конец")).get(1).get(0);
-        assertTrue(frame.isStartTitres());
+                "<command type=\"character\" action=\"startTitles\"/>Конец")).get(1).get(0);
+        assertTrue(frame.isStartTitles());
     }
 
     @Test
     void legacyTitresCommandNameIsSupported() throws IOException {
+        // историческое написание из старых сценариев
         SceneFrame frame = parse(scenarioWith(
                 "<command type=\"character\" action=\"StartTitries\"/>Конец")).get(1).get(0);
-        assertTrue(frame.isStartTitres());
+        assertTrue(frame.isStartTitles());
     }
 
     @Test
     void ordinaryFrameDoesNotStartTitres() throws IOException {
-        assertFalse(parse(scenarioWith("Обычная реплика")).get(1).get(0).isStartTitres());
+        assertFalse(parse(scenarioWith("Обычная реплика")).get(1).get(0).isStartTitles());
     }
 
     @Test
@@ -166,7 +167,7 @@ class MigratedFeaturesTest {
 
     @Test
     void legacyReputationCommandIsParsed() throws IOException {
-        // формат: Персонаж:AppendReputathion:значение
+        // формат: Персонаж:AppendReputathion:значение (историческое написание)
         List<AnimationCommand> commands = parse(scenarioWith(
                 "<command>Liza:AppendReputathion:10</command>Реплика"))
                 .get(1).get(0).getEntryAnimations();
@@ -184,12 +185,12 @@ class MigratedFeaturesTest {
     @Test
     void withVisualKeepsSoundAndTitres() throws IOException {
         SceneFrame frame = parse(scenarioWith(
-                "<command type=\"character\" action=\"startTitres\"/>Конец")).get(1).get(0);
+                "<command type=\"character\" action=\"startTitles\"/>Конец")).get(1).get(0);
         frame.setSoundPath("lib/sound/door.mp3");
 
         SceneFrame display = frame.withVisual(frame.getVisualState());
 
         assertEquals("lib/sound/door.mp3", display.getSoundPath());
-        assertTrue(display.isStartTitres());
+        assertTrue(display.isStartTitles());
     }
 }
