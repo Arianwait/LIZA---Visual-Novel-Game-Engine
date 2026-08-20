@@ -38,7 +38,9 @@ import kz.aws.game.utils.VirtualViewport;
  * только к игровой сцене, не затрагивая UI.
  */
 public class SceneRenderer {
-    private static final Map<String, Image> imageCache = new HashMap<>();
+    // ConcurrentHashMap: AssetPreloader пишет в кеш из фонового потока,
+    // пока FX-поток читает его при рендере
+    private static final Map<String, Image> imageCache = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, javafx.animation.Animation> activeAnimations = new HashMap<>();
     private static final ImageViewPool imageViewPool = ImageViewPool.getInstance();
 

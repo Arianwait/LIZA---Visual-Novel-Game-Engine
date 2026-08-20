@@ -70,6 +70,11 @@ public class DialogPanelController implements DialogPanel {
     private Timeline typingTimeline;
     private SceneSettings settingsRef;
 
+    /** Сцена, на которую повешен текущий фильтр хоткеев (для снятия). */
+    private static Scene hotkeyScene;
+    /** Текущий фильтр хоткеев; панель пересоздаётся, фильтр должен быть один. */
+    private static javafx.event.EventHandler<javafx.scene.input.KeyEvent> hotkeyFilter;
+
     /**
      * Инициализирует панель после загрузки FXML: задаёт размеры элементов
      * в дизайн-пикселях и настраивает визуальный режим.
@@ -154,30 +159,65 @@ public class DialogPanelController implements DialogPanel {
      * @param scene       сцена
      */
     private void setupHotkeys(AppSettings appSettings, Scene scene) {
-        scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, event -> {
-            if (SceneInfo.isPuzzleActive()) {
-                handlePuzzleHotkey(event);
-                return;
+        if (scene == null) return;
+        removeHotkeys();
+
+        hotkeyFilter = event -> handleHotkey(appSettings, event);
+        hotkeyScene = scene;
+        scene.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, hotkeyFilter);
+    }
+
+    /**
+     * Снимает ранее установленный фильтр хоткеев.
+     * Панель диалога пересоздаётся при загрузке сейва и выходе в меню —
+     * без снятия фильтры накапливались и Esc/Tab срабатывали многократно.
+     */
+    private void removeHotkeys() {
+        if (hotkeyScene == null || hotkeyFilter == null) return;
+        hotkeyScene.removeEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, hotkeyFilter);
+        hotkeyScene = null;
+        hotkeyFilter = null;
+    }
+
+    /**
+     * Обрабатывает нажатие горячей клавиши: паззл, открытый overlay или игра.
+     *
+     * @param appSettings настройки приложения
+     * @param event       событие клавиши
+     */
+    private void handleHotkey(AppSettings appSettings, javafx.scene.input.KeyEvent event) {
+        if (SceneInfo.isPuzzleActive()) {
+            handlePuzzleHotkey(event);
+            return;
+        }
+        if (hasOverlayOpen(appSettings)) {
+            handleOverlayHotkey(event);
+            return;
+        }
+        switch (event.getCode()) {
+            case ESCAPE -> {
+                GamePauseMenuController.open(appSettings);
+                event.consume();
             }
-            if (hasOverlayOpen(appSettings)) {
-                if (event.getCode() == javafx.scene.input.KeyCode.ESCAPE && GamePauseMenuController.isOpen()) {
-                    GamePauseMenuController.closeCurrent();
-                    event.consume();
-                }
-                return;
+            case TAB -> {
+                ButtonActionRegistry.run("game-btn-history", appSettings);
+                event.consume();
             }
-            switch (event.getCode()) {
-                case ESCAPE -> {
-                    GamePauseMenuController.open(appSettings);
-                    event.consume();
-                }
-                case TAB -> {
-                    ButtonActionRegistry.run("game-btn-history", appSettings);
-                    event.consume();
-                }
-                default -> { }
-            }
-        });
+            default -> { }
+        }
+    }
+
+    /**
+     * Обрабатывает Esc при открытой overlay-панели — закрывает меню паузы.
+     *
+     * @param event событие клавиши
+     */
+    private void handleOverlayHotkey(javafx.scene.input.KeyEvent event) {
+        if (event.getCode() == javafx.scene.input.KeyCode.ESCAPE
+                && GamePauseMenuController.isOpen()) {
+            GamePauseMenuController.closeCurrent();
+            event.consume();
+        }
     }
 
     /**
@@ -203,7 +243,7 @@ public class DialogPanelController implements DialogPanel {
      * @return true если есть открытый overlay
      */
     private boolean hasOverlayOpen(AppSettings appSettings) {
-        return appSettings.getRoot().getChildren().size() > 2;
+        return kz.aws.game.utils.OverlayMarker.hasOpenOverlay(appSettings.getRoot());
     }
 
     /**

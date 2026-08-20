@@ -1,6 +1,8 @@
 package kz.aws.game.dispetcher;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -9,6 +11,9 @@ import javafx.scene.input.KeyCombination;
 import javafx.stage.Stage;
 import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.appsettings.JsonParser;
+import kz.aws.game.engine.model.SceneFrame;
+import kz.aws.game.engine.parser.ScenarioValidator;
+import kz.aws.game.engine.parser.SceneXmlParser;
 import kz.aws.game.mainscene.LogoAnimation;
 import kz.aws.game.utils.VirtualViewport;
 
@@ -21,8 +26,42 @@ public class GameDispetcher extends Application implements Serializable {
 
 	private static final long serialVersionUID = 8222725889624267118L;
 
+	/** Аргумент запуска: проверить сценарий и выйти, не открывая окно. */
+	private static final String VALIDATE_FLAG = "--validate";
+
+	/**
+	 * Точка входа. С аргументом {@value #VALIDATE_FLAG} проверяет сценарий
+	 * и завершается с кодом 1, если найдены проблемы.
+	 *
+	 * @param args аргументы командной строки
+	 */
 	public static void main(String[] args) {
+		if (args.length > 0 && VALIDATE_FLAG.equals(args[0])) {
+			System.exit(validateScenario());
+			return;
+		}
 		launch(args);
+	}
+
+	/**
+	 * Разбирает сценарий и печатает найденные проблемы.
+	 *
+	 * @return 0 — сценарий корректен; 1 — есть проблемы
+	 */
+	private static int validateScenario() {
+		Map<Integer, List<SceneFrame>> scenes = SceneXmlParser.parseAllScenes();
+		List<String> problems = ScenarioValidator.validate(scenes);
+
+		System.out.println("Проверка сценария: сцен загружено — " + scenes.size());
+		if (problems.isEmpty()) {
+			System.out.println("Проблем не найдено.");
+			return 0;
+		}
+		System.out.println("Найдено проблем: " + problems.size());
+		for (String problem : problems) {
+			System.out.println("  " + problem);
+		}
+		return 1;
 	}
 
 	/**

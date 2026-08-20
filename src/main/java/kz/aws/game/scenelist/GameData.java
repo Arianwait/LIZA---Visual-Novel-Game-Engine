@@ -7,12 +7,18 @@ import java.util.List;
 import java.util.Map;
 import kz.aws.game.engine.model.HistoryStep;
 
+/**
+ * Сериализуемое состояние игры для файла сохранения: позиция в сценарии,
+ * история, переменные, глобальное состояние (флаги, репутация, улики) и тема UI.
+ */
 public class GameData implements Serializable {
-    private static final long serialVersionUID = 2L; // Updated version
-    
+    // 2L сохранён намеренно: новые поля читаются из старых сейвов как null
+    // и подставляются пустыми; смена UID сломала бы совместимость.
+    private static final long serialVersionUID = 2L;
+
     // Legacy fields (kept for compatibility or removal later)
-    private List<String> choiceList; 
-    private int clicker = 0; 
+    private List<String> choiceList;
+    private int clicker = 0;
 
     // New Engine Fields
     private int currentSceneId;
@@ -23,6 +29,12 @@ public class GameData implements Serializable {
     private Map<String, String> playerVariables;
     /** Тема интерфейса при сохранении (hitech, classic, walk). При загрузке восстанавливается. */
     private String uiTheme;
+    /** Флаги прогресса из SceneController. null — сейв старого формата. */
+    private Map<String, Boolean> gameFlags;
+    /** Репутация персонажей из SceneController. null — сейв старого формата. */
+    private Map<String, Integer> characterReputation;
+    /** Собранные улики и данные паззлов из SceneController. null — сейв старого формата. */
+    private Map<String, String> playerChoices;
 
     public GameData() {
         choiceList = new ArrayList<>();
@@ -30,6 +42,9 @@ public class GameData implements Serializable {
         history = new ArrayList<>();
         gameVariables = new HashMap<>();
         playerVariables = new HashMap<>();
+        gameFlags = new HashMap<>();
+        characterReputation = new HashMap<>();
+        playerChoices = new HashMap<>();
     }
 
     public void setChoice(List<String> choice) {
@@ -66,4 +81,18 @@ public class GameData implements Serializable {
 
     public String getUiTheme() { return uiTheme; }
     public void setUiTheme(String uiTheme) { this.uiTheme = uiTheme; }
+
+    /** May return null for saves created before flags were persisted. */
+    public Map<String, Boolean> getGameFlags() { return gameFlags; }
+    public void setGameFlags(Map<String, Boolean> gameFlags) { this.gameFlags = gameFlags; }
+
+    /** May return null for saves created before reputation was persisted. */
+    public Map<String, Integer> getCharacterReputation() { return characterReputation; }
+    public void setCharacterReputation(Map<String, Integer> characterReputation) {
+        this.characterReputation = characterReputation;
+    }
+
+    /** May return null for saves created before clues were persisted. */
+    public Map<String, String> getPlayerChoices() { return playerChoices; }
+    public void setPlayerChoices(Map<String, String> playerChoices) { this.playerChoices = playerChoices; }
 }

@@ -218,6 +218,7 @@ public class SaveLoadPanelController extends VBox {
      */
     public void showPanel(StackPane root) {
         this.root = root;
+        kz.aws.game.utils.OverlayMarker.mark(menuPanel);
         root.getChildren().add(menuPanel);
         AnimationUtils.slideInFromSide(menuPanel,
                 VirtualViewport.DESIGN_WIDTH, 0, SLIDE_DURATION_MS);
@@ -290,9 +291,24 @@ public class SaveLoadPanelController extends VBox {
         GameData gameData = engine.getSaveData();
         String dateTime = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
         String saveFileName = slotIndex + "_" + gameData.getCurrentSceneId() + "_" + dateTime + ".ser";
-        SaveManadger.serializeClicker(gameData, SAVE_DIRECTORY + "/" + saveFileName);
+
+        if (!SaveManadger.serializeClicker(gameData, SAVE_DIRECTORY + "/" + saveFileName)) {
+            showSaveFailed();
+            return;
+        }
         button.setText(dateTime);
         closePanel();
+    }
+
+    /**
+     * Сообщает игроку, что сохранение не удалось (нет прав, диск занят и т.п.),
+     * вместо молчаливой отметки «сохранено».
+     */
+    private void showSaveFailed() {
+        ConfirmDialogController dialog = new ConfirmDialogController(appSettings);
+        dialog.show("Не удалось сохранить игру. Проверьте доступ к папке "
+                        + SAVE_DIRECTORY + ".",
+                null, () -> { }, () -> { }, buttonsBox);
     }
 
     /**

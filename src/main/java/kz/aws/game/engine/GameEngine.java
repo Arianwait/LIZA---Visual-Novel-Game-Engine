@@ -14,6 +14,7 @@ import kz.aws.game.engine.model.SceneFrame;
 import kz.aws.game.engine.model.StopEffectCommand;
 import kz.aws.game.engine.model.VisualEffectCommand;
 import kz.aws.game.engine.model.VisualState;
+import kz.aws.game.engine.parser.ScenarioValidator;
 import kz.aws.game.engine.parser.SceneXmlParser;
 import kz.aws.game.engine.render.SceneRenderer;
 import kz.aws.game.panel.BaseGamePanel;
@@ -91,10 +92,24 @@ public class GameEngine {
         renderCurrentFrameImmediate();
     }
 
+    /**
+     * Загружает библиотеку персонажей и весь сценарий,
+     * сообщая о найденных проблемах целостности.
+     */
     public void initializeAndLoadAll() {
         kz.aws.game.engine.resources.CharacterLibrary.initialize();
         this.allScenes = SceneXmlParser.parseAllScenes();
-        System.out.println("Loaded scenes: " + allScenes.keySet());
+        reportScenarioProblems();
+    }
+
+    /** Печатает проблемы сценария (битые переходы и т.п.), не прерывая запуск. */
+    private void reportScenarioProblems() {
+        List<String> problems = ScenarioValidator.validate(allScenes);
+        if (problems.isEmpty()) return;
+        System.err.println("Проверка сценария: найдено проблем — " + problems.size());
+        for (String problem : problems) {
+            System.err.println("  " + problem);
+        }
     }
 
     /**
@@ -132,6 +147,12 @@ public class GameEngine {
         }
     }
 
+    /**
+     * Собирает состояние игры для сохранения: позицию, историю, переменные
+     * и глобальное состояние (флаги, репутацию, собранные улики).
+     *
+     * @return данные сохранения
+     */
     public GameData getSaveData() {
         GameData data = new GameData();
         data.setCurrentSceneId(currentSceneId);
@@ -141,6 +162,9 @@ public class GameEngine {
         data.setPlayerVariables(new HashMap<>(playerVariables));
         data.setClicker(currentFrameIndex);
         data.setChoice(SceneInfo.getChoiceList());
+        data.setGameFlags(SceneController.getFlagsSnapshot());
+        data.setCharacterReputation(SceneController.getReputationSnapshot());
+        data.setPlayerChoices(SceneController.getPlayerChoicesSnapshot());
         if (SceneInfo.getAppSettings() != null) {
             data.setUiTheme(SceneInfo.getAppSettings().getUiTheme());
         }
@@ -163,10 +187,56 @@ public class GameEngine {
 
         restoreHistory(data);
         restoreVariables(data);
+        restoreGlobalState(data);
         restoreUiState(data);
+        clampPositionToScene();
         syncDeltaTracking();
         ensureHistoryNotEmpty();
         renderCurrentFrameImmediate();
+    }
+
+    /**
+     * Восстанавливает глобальное состояние: флаги, репутацию и собранные улики.
+     * Сейвы старого формата этих полей не содержат — тогда улики берутся
+     * из истории (снимок playerChoices), а флаги и репутация остаются пустыми.
+     *
+     * @param data данные сохранения
+     */
+    private void restoreGlobalState(GameData data) {
+        if (data.getGameFlags() != null) {
+            SceneController.restoreFlags(data.getGameFlags());
+        }
+        if (data.getCharacterReputation() != null) {
+            SceneController.restoreReputation(data.getCharacterReputation());
+        }
+        if (data.getPlayerChoices() != null) {
+            SceneController.restorePlayerChoices(data.getPlayerChoices());
+        } else {
+            SceneController.restorePlayerChoices(findLastPlayerChoices(historyIndex));
+        }
+    }
+
+    /**
+     * Приводит позицию к границам сцены: сценарий мог измениться после
+     * создания сейва, иначе рендер упал бы с IndexOutOfBoundsException.
+     */
+    private void clampPositionToScene() {
+        List<SceneFrame> frames = allScenes.get(currentSceneId);
+        if (frames == null || frames.isEmpty()) {
+            System.err.println("Сохранение ссылается на несуществующую сцену "
+                    + currentSceneId + " — сценарий изменился");
+            isFinished = true;
+            return;
+        }
+        if (currentFrameIndex >= frames.size()) {
+            System.err.println("Сохранение ссылается на кадр " + currentFrameIndex
+                    + " сцены " + currentSceneId + ", а в ней " + frames.size()
+                    + " — позиция сдвинута на последний кадр");
+            currentFrameIndex = frames.size() - 1;
+        }
+        if (currentFrameIndex < 0) {
+            currentFrameIndex = 0;
+        }
     }
 
     /**
@@ -749,6 +819,7 @@ public class GameEngine {
             }
         });
 
+        kz.aws.game.utils.OverlayMarker.mark(panel);
         root.getChildren().add(panel);
         StackPane.setAlignment(panel, Pos.CENTER);
         panel.toFront();

@@ -29,41 +29,88 @@ import kz.aws.game.engine.model.VisualState;
 import kz.aws.game.engine.model.ZoomEffectCommand;
 import kz.aws.game.engine.resources.CharacterLibrary;
 
+/**
+ * Парсер сценария из XML: превращает элементы {@code <dialog>} в кадры сцен.
+ * Ошибка в одной сцене не отменяет остальные — битая сцена пропускается
+ * с сообщением, а не обрушивает весь сценарий.
+ */
 public class SceneXmlParser {
 
+    /** Основной файл сценария. */
+    private static final String SCENARIO_PATH = "lib/Scene/Dialog_Structured.xml";
+    /** Запасной файл сценария старого формата. */
+    private static final String LEGACY_SCENARIO_PATH = "lib/Scene/Dialog.xml";
+
+    /**
+     * Загружает и разбирает все сцены сценария.
+     *
+     * @return карта id сцены → кадры; пустая, если файл не найден или нечитаем
+     */
     public static Map<Integer, List<SceneFrame>> parseAllScenes() {
+        Document doc = loadScenarioDocument();
+        if (doc == null) return new HashMap<>();
+
         Map<Integer, List<SceneFrame>> allScenes = new HashMap<>();
-
-        try {
-            File xmlFile = new File("lib/Scene/Dialog_Structured.xml");
-            if (!xmlFile.exists()) {
-                 xmlFile = new File("lib/Scene/Dialog.xml");
-            }
-
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            Document doc = dBuilder.parse(xmlFile);
-            doc.getDocumentElement().normalize();
-
-            NodeList dialogList = doc.getElementsByTagName("dialog");
-            for (int i = 0; i < dialogList.getLength(); i++) {
-                Node node = dialogList.item(i);
-                if (node.getNodeType() == Node.ELEMENT_NODE) {
-                    Element dialogElement = (Element) node;
-                    String idStr = dialogElement.getAttribute("id");
-                    if (idStr != null && !idStr.isEmpty()) {
-                        int id = Integer.parseInt(idStr);
-                        List<SceneFrame> frames = parseDialogElement(dialogElement);
-                        allScenes.put(id, frames);
-                    }
-                }
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        NodeList dialogList = doc.getElementsByTagName("dialog");
+        for (int i = 0; i < dialogList.getLength(); i++) {
+            Node node = dialogList.item(i);
+            if (node.getNodeType() != Node.ELEMENT_NODE) continue;
+            parseSceneInto(allScenes, (Element) node);
         }
-
         return allScenes;
+    }
+
+    /**
+     * Разбирает одну сцену и кладёт её в карту. Битый или дублирующийся id
+     * пропускается с сообщением — остальной сценарий остаётся рабочим.
+     *
+     * @param allScenes     накопитель сцен
+     * @param dialogElement элемент {@code <dialog>}
+     */
+    private static void parseSceneInto(Map<Integer, List<SceneFrame>> allScenes,
+                                       Element dialogElement) {
+        String idStr = dialogElement.getAttribute("id");
+        if (idStr == null || idStr.isEmpty()) return;
+
+        int id;
+        try {
+            id = Integer.parseInt(idStr.trim());
+        } catch (NumberFormatException e) {
+            System.err.println("Сценарий: сцена с некорректным id=\"" + idStr
+                    + "\" пропущена (ожидается целое число)");
+            return;
+        }
+        if (allScenes.containsKey(id)) {
+            System.err.println("Сценарий: сцена id=" + id
+                    + " встречается повторно — использована первая");
+            return;
+        }
+        allScenes.put(id, parseDialogElement(dialogElement));
+    }
+
+    /**
+     * Загружает XML-документ сценария (основной файл или запасной).
+     *
+     * @return документ или null, если файл отсутствует либо не разбирается
+     */
+    private static Document loadScenarioDocument() {
+        File xmlFile = new File(SCENARIO_PATH);
+        if (!xmlFile.exists()) {
+            xmlFile = new File(LEGACY_SCENARIO_PATH);
+        }
+        if (!xmlFile.exists()) {
+            System.err.println("Файл сценария не найден: " + SCENARIO_PATH);
+            return null;
+        }
+        try {
+            DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            Document doc = builder.parse(xmlFile);
+            doc.getDocumentElement().normalize();
+            return doc;
+        } catch (Exception e) {
+            System.err.println("Сценарий не разобран (" + xmlFile + "): " + e.getMessage());
+            return null;
+        }
     }
 
     public static List<SceneFrame> parseScene(int sceneId) {

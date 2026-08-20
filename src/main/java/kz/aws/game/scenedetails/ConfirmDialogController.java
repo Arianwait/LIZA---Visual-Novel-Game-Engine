@@ -74,6 +74,7 @@ public class ConfirmDialogController extends StackPane {
         setupMessage(message);
         setupButtons(onConfirm, onCancel);
         bindResponsiveLayout();
+        kz.aws.game.utils.OverlayMarker.mark(this);
         appSettings.getRoot().getChildren().add(this);
     }
 

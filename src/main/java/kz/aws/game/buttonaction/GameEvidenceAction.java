@@ -33,6 +33,7 @@ public final class GameEvidenceAction implements ButtonActionHandler {
             SceneInfo.enableEventHandler(root);
         });
 
+        kz.aws.game.utils.OverlayMarker.mark(panel);
         root.getChildren().add(panel);
         StackPane.setAlignment(panel, Pos.CENTER);
         panel.toFront();

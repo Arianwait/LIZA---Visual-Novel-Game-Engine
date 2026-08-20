@@ -73,6 +73,7 @@ public final class OpenPuzzleGameAction implements GameActionHandler {
             }
         });
 
+        kz.aws.game.utils.OverlayMarker.mark(panel);
         root.getChildren().add(panel);
         StackPane.setAlignment(panel, Pos.CENTER);
         panel.toFront();
