@@ -14,6 +14,7 @@ import kz.aws.game.engine.model.SceneFrame;
 import kz.aws.game.engine.model.StopEffectCommand;
 import kz.aws.game.engine.model.VisualEffectCommand;
 import kz.aws.game.engine.model.VisualState;
+import kz.aws.game.engine.parser.ScenarioValidator;
 import kz.aws.game.engine.parser.SceneXmlParser;
 import kz.aws.game.engine.render.SceneRenderer;
 import kz.aws.game.panel.BaseGamePanel;
@@ -91,10 +92,24 @@ public class GameEngine {
         renderCurrentFrameImmediate();
     }
 
+    /**
+     * Загружает библиотеку персонажей и весь сценарий,
+     * сообщая о найденных проблемах целостности.
+     */
     public void initializeAndLoadAll() {
         kz.aws.game.engine.resources.CharacterLibrary.initialize();
         this.allScenes = SceneXmlParser.parseAllScenes();
-        System.out.println("Loaded scenes: " + allScenes.keySet());
+        reportScenarioProblems();
+    }
+
+    /** Печатает проблемы сценария (битые переходы и т.п.), не прерывая запуск. */
+    private void reportScenarioProblems() {
+        List<String> problems = ScenarioValidator.validate(allScenes);
+        if (problems.isEmpty()) return;
+        System.err.println("Проверка сценария: найдено проблем — " + problems.size());
+        for (String problem : problems) {
+            System.err.println("  " + problem);
+        }
     }
 
     /**

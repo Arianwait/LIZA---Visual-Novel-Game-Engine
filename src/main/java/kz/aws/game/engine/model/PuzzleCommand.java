@@ -13,7 +13,7 @@ package kz.aws.game.engine.model;
  * </pre>
  *
  * <ul>
- *   <li>{@code id}        — id загадки из {@link kz.aws.game.puzzle.PuzzlePanel#id()}</li>
+ *   <li>{@code id}        — id панели из {@link kz.aws.game.panel.GamePanel#id()}</li>
  *   <li>{@code flag}      — имя флага, куда пишется true/false по итогу (опционально)</li>
  *   <li>{@code onSuccess} — номер сцены при победе (опционально, -1 = нет)</li>
  *   <li>{@code onFailure} — номер сцены при проигрыше (опционально, -1 = нет)</li>
