@@ -159,6 +159,7 @@ public class DialogTreePane {
                 VirtualViewport.height(0.05), VirtualViewport.width(0.02),
                 VirtualViewport.height(0.05), 0));
 
+        kz.aws.game.utils.OverlayMarker.mark(container);
         root.getChildren().add(container);
         AnimationUtils.slideInFromSide(container,
                 VirtualViewport.DESIGN_WIDTH, 0, SLIDE_DURATION_MS);

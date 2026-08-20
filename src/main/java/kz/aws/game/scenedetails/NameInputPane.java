@@ -153,6 +153,7 @@ public class NameInputPane {
         root.widthProperty().addListener((o, a, b) -> updatePaneMargin());
         root.heightProperty().addListener((o, a, b) -> updatePaneMargin());
         updatePaneMargin();
+        kz.aws.game.utils.OverlayMarker.mark(container);
         root.getChildren().add(container);
         container.toFront();
         /* Блокируем клик по сцене и кнопки панели, чтобы во время ввода нельзя было прокручивать диалог мышкой */

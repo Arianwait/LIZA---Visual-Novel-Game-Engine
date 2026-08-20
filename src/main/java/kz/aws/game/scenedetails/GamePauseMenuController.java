@@ -103,6 +103,7 @@ public class GamePauseMenuController extends StackPane {
         setupTitle();
         createButtons();
         bindLayout();
+        kz.aws.game.utils.OverlayMarker.mark(this);
         root.getChildren().add(this);
         SceneInfo.disableEventHandler(root);
     }
