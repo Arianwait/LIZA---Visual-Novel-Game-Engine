@@ -15,7 +15,7 @@
 		<maven.compiler.target>21</maven.compiler.target>
 
 		<javafx.version>21.0.5</javafx.version>
-		<main.class>kz.aws.game.dispetcher.GameDispetcher</main.class>
+		<main.class>kz.aws.game.dispatcher.GameDispatcher</main.class>
 	</properties>
 
 	<dependencies>
@@ -55,11 +55,17 @@
 			<version>0.10.2</version>
 		</dependency>
 
-		<!-- SLF4J binding: убирает предупреждение "Failed to load StaticLoggerBinder" (reflections тянет slf4j-api 1.7) -->
+		<!-- Логирование: slf4j + logback (консоль и файл logs/game.log).
+		     У игрока с .exe консоли нет — без файла диагностики не было вовсе. -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-simple</artifactId>
-			<version>1.7.36</version>
+			<artifactId>slf4j-api</artifactId>
+			<version>2.0.13</version>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>1.5.6</version>
 		</dependency>
 
 		<!-- JUnit 5: тесты модели движка (script-слой, merge визуала) -->
@@ -169,4 +175,59 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<!--
+		  Сборка нативного дистрибутива через jpackage (JDK 21).
+		  В отличие от launch4j кладёт рядом правильный рантайм вместе с JavaFX,
+		  поэтому у игрока не нужен установленный JRE и невозможен
+		  UnsupportedClassVersionError.
+
+		  Запуск:    mvn -Pjpackage clean package
+		  Результат: target/dist/Innagano/ (.exe + собственный рантайм)
+		  Папку lib/ с контентом нужно положить рядом с Innagano.exe.
+		-->
+		<profile>
+			<id>jpackage</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<version>3.2.0</version>
+						<executions>
+							<execution>
+								<id>build-native-image</id>
+								<phase>package</phase>
+								<goals>
+									<goal>exec</goal>
+								</goals>
+								<configuration>
+									<executable>${java.home}/bin/jpackage</executable>
+									<arguments>
+										<argument>--type</argument>
+										<argument>app-image</argument>
+										<argument>--name</argument>
+										<argument>Innagano</argument>
+										<argument>--app-version</argument>
+										<argument>1.0.0</argument>
+										<argument>--input</argument>
+										<argument>${project.build.directory}</argument>
+										<argument>--main-jar</argument>
+										<argument>${project.artifactId}-${project.version}-jar-with-dependencies.jar</argument>
+										<argument>--main-class</argument>
+										<argument>${main.class}</argument>
+										<argument>--dest</argument>
+										<argument>${project.build.directory}/dist</argument>
+										<argument>--java-options</argument>
+										<argument>--enable-native-access=javafx.media</argument>
+									</arguments>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>

@@ -4,7 +4,7 @@
 XML-файлах, а логика расширяется через аннотации и автопоиск классов (Reflections) —
 новые команды, кнопки, панели и визуальные эффекты добавляются без правки ядра.
 
-> Игра запускается классом `kz.aws.game.dispetcher.GameDispetcher`, читает сцены из
+> Игра запускается классом `kz.aws.game.dispatcher.GameDispatcher`, читает сцены из
 > `lib/Scene/Dialog_Structured.xml` и ресурсы из папки `lib/`.
 
 ---
@@ -80,7 +80,7 @@ kz.aws.game/
 │       ├── dialog_styles.css      — стили текста диалогов
 │       └── UI/                    — Buttons.xml, MainMenu.xml, SceneSettings.xml …
 └── src/main/java/kz/aws/game/
-    ├── dispetcher/             — GameDispetcher (точка входа, JavaFX Application)
+    ├── dispatcher/             — GameDispatcher (точка входа, JavaFX Application)
     ├── engine/                 — ядро: GameEngine, parser, render, model, effect
     │   ├── parser/             — SceneXmlParser (XML → SceneFrame)
     │   ├── render/             — SceneRenderer (отрисовка кадра)
@@ -88,14 +88,11 @@ kz.aws.game/
     │   └── effect/             — проигрыватели эффектов (@VisualEffect)
     ├── panel/                  — система панелей/мини-игр (@GamePanel, PuzzleRegistry)
     ├── buttonaction/           — действия кнопок (@ButtonAction)
-    ├── gameaction/             — действия команд сцены (@GameAction)
-    ├── commands/               — CommandProcessor, SetFlag/SetChoice/SetReputation
-    ├── scenelist/              — SceneController, SceneBuilder, SceneInfo, GameData
-    ├── scenedetails/           — TableDatail (текст), оверлеи, диалоговые контроллеры
+    ├── scenelist/              — SceneController (состояние), SceneBuilder, SceneInfo, GameData
+    ├── scenedetails/           — панель диалога, оверлеи, диалоговые контроллеры
     ├── mainscene/              — главное меню, настройки, экран сохранений
-    ├── character/              — ICharacter / Character
     ├── soundtrack/             — SoundManager, Soundtrack, SoundEffect
-    ├── appsettings/            — AppSettings, ConfigManager, JsonParser
+    ├── appsettings/            — AppSettings, JsonParser, JsonConfigWriter
     └── utils/                  — парсеры конфигов, UiFactory, подстановка переменных
 ```
 
@@ -103,16 +100,18 @@ kz.aws.game/
 
 ## Как это работает (кратко)
 
-1. **`GameDispetcher.start()`** читает настройки (`AppSettings`), создаёт окно и сцену,
+1. **`GameDispatcher.start()`** читает настройки (`AppSettings`), создаёт окно и сцену,
    подключает `lib/config/style.css` и показывает логотип-заставку.
 2. **`SceneXmlParser`** разбирает `Dialog_Structured.xml` в список `SceneFrame`
    (все сцены грузятся в память на старте).
 3. **`GameEngine`** ведёт игровой цикл: показывает кадр через **`SceneRenderer`**,
    обрабатывает «Далее»/«Назад», историю, сохранения и запуск панелей.
-4. **`CommandProcessor`** на каждом кадре исполняет `<command>` — диспетчеризует их
-   по реестрам действий (`@GameAction`), эффектов (`@VisualEffect`) и панелей (`@GamePanel`).
+4. **`SceneXmlParser`** превращает `<command>` в объекты модели (`StateCommand`,
+   `PuzzleCommand`, `*EffectCommand`, `SoundCommand`), а `GameEngine` исполняет их
+   при показе кадра; эффекты и панели находятся через реестры
+   (`@VisualEffect`, `@GamePanel`).
 5. **`SceneController`** хранит состояние игрока (флаги, выборы, репутация) со снимками
-   для отката.
+   для отката; полный набор снимков пишется в историю и в сейв.
 
 ---
 
@@ -145,7 +144,6 @@ kz.aws.game/
 
 | Что добавляем | Аннотация | Пакет | Вызов из XML |
 |---------------|-----------|-------|--------------|
-| Команда сцены | `@GameAction("id")` | `kz.aws.game.gameaction` | `<command type="..." action="id" .../>` |
 | Кнопка | `@ButtonAction("id")` | `kz.aws.game.buttonaction` | `id` кнопки в `lib/config/UI/Buttons.xml` |
 | Панель / мини-игра | `@GamePanel(id=...)` | `kz.aws.game.panel` | `<command type="panel" id="..."/>` |
 | Визуальный эффект | `@VisualEffect("id")` | `kz.aws.game.engine.effect` | `<command type="effect" effect="id"/>` |

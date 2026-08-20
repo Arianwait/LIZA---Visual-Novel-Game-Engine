@@ -9,6 +9,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Общие операции чтения XML-конфигураций: загрузка документа,
@@ -16,6 +18,8 @@ import org.w3c.dom.NodeList;
  * Используется парсерами конфигов в {@code kz.aws.game.utils}.
  */
 public final class XmlConfigSupport {
+
+    private static final Logger LOG = LoggerFactory.getLogger(XmlConfigSupport.class);
 
     private XmlConfigSupport() {
     }
@@ -27,9 +31,9 @@ public final class XmlConfigSupport {
      * @return документ или null, если файл отсутствует либо не разбирается
      */
     public static Document loadDocument(String path) {
-        File file = new File(path);
+        File file = ResourceLocator.file(path);
         if (!file.isFile()) {
-            System.err.println("Конфигурация не найдена: " + path);
+            LOG.error("Конфигурация не найдена: " + path);
             return null;
         }
         try {
@@ -38,7 +42,7 @@ public final class XmlConfigSupport {
             document.getDocumentElement().normalize();
             return document;
         } catch (Exception e) {
-            System.err.println("Конфигурация не разобрана (" + path + "): " + e.getMessage());
+            LOG.error("Конфигурация не разобрана (" + path + "): " + e.getMessage());
             return null;
         }
     }

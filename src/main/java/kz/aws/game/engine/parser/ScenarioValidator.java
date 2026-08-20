@@ -19,9 +19,10 @@ public final class ScenarioValidator {
     /** Команды character-типа, которые понимает парсер сцен. */
     private static final java.util.Set<String> KNOWN_CHARACTER_ACTIONS = java.util.Set.of(
             "showPerson", "removeFromScene", "move_Left", "move_Right", "move_Center",
-            "SetFlag", "SetReputation",
+            "SetFlag", "SetReputation", "SetChoice",
             "AppendReputation", "AppendReputathion",
-            "ReduceReputation", "ReduceReputathion");
+            "ReduceReputation", "ReduceReputathion",
+            "startTitles", "StartTitres", "StartTitries");
 
     private ScenarioValidator() {
     }

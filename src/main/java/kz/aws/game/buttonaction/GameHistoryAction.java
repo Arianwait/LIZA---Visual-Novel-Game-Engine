@@ -21,7 +21,7 @@ public final class GameHistoryAction implements ButtonActionHandler {
                 sceneId = data.getCurrentSceneId();
             }
         }
-        int clicker = SceneInfo.getCliker();
+        int clicker = SceneInfo.getClicker();
         DialogTreePane dialogTree = new DialogTreePane(appSettings, sceneId, clicker);
         dialogTree.addInScene(appSettings.getRoot());
     }

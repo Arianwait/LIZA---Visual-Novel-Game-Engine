@@ -21,6 +21,7 @@ import kz.aws.game.engine.model.CloseEyesEffectCommand;
 import kz.aws.game.engine.model.ColorFilterEffectCommand;
 import kz.aws.game.engine.model.PuzzleCommand;
 import kz.aws.game.engine.model.ShakeEffectCommand;
+import kz.aws.game.engine.model.SoundCommand;
 import kz.aws.game.engine.model.StateCommand;
 import kz.aws.game.engine.model.ChoiceOption;
 import kz.aws.game.engine.model.SceneFrame;
@@ -29,6 +30,9 @@ import kz.aws.game.engine.model.VisualEffectCommand;
 import kz.aws.game.engine.model.VisualState;
 import kz.aws.game.engine.model.ZoomEffectCommand;
 import kz.aws.game.engine.resources.CharacterLibrary;
+import kz.aws.game.utils.ResourceLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Парсер сценария из XML: превращает элементы {@code <dialog>} в кадры сцен.
@@ -36,6 +40,8 @@ import kz.aws.game.engine.resources.CharacterLibrary;
  * с сообщением, а не обрушивает весь сценарий.
  */
 public class SceneXmlParser {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SceneXmlParser.class);
 
     /** Основной файл сценария. */
     private static final String SCENARIO_PATH = "lib/Scene/Dialog_Structured.xml";
@@ -48,7 +54,7 @@ public class SceneXmlParser {
      * @return путь к XML-файлу сценария
      */
     public static String getScenarioPath() {
-        return new File(SCENARIO_PATH).exists() ? SCENARIO_PATH : LEGACY_SCENARIO_PATH;
+        return ResourceLocator.file(SCENARIO_PATH).exists() ? SCENARIO_PATH : LEGACY_SCENARIO_PATH;
     }
 
     /**
@@ -96,12 +102,12 @@ public class SceneXmlParser {
         try {
             id = Integer.parseInt(idStr.trim());
         } catch (NumberFormatException e) {
-            System.err.println("Сценарий: сцена с некорректным id=\"" + idStr
+            LOG.error("Сценарий: сцена с некорректным id=\"" + idStr
                     + "\" пропущена (ожидается целое число)");
             return;
         }
         if (allScenes.containsKey(id)) {
-            System.err.println("Сценарий: сцена id=" + id
+            LOG.error("Сценарий: сцена id=" + id
                     + " встречается повторно — использована первая");
             return;
         }
@@ -115,9 +121,9 @@ public class SceneXmlParser {
      * @return документ или null, если файл отсутствует либо не разбирается
      */
     private static Document loadScenarioDocument(String scenarioPath) {
-        File xmlFile = new File(scenarioPath);
+        File xmlFile = ResourceLocator.file(scenarioPath);
         if (!xmlFile.exists()) {
-            System.err.println("Файл сценария не найден: " + scenarioPath);
+            LOG.error("Файл сценария не найден: " + scenarioPath);
             return null;
         }
         try {
@@ -126,7 +132,7 @@ public class SceneXmlParser {
             doc.getDocumentElement().normalize();
             return doc;
         } catch (Exception e) {
-            System.err.println("Сценарий не разобран (" + xmlFile + "): " + e.getMessage());
+            LOG.error("Сценарий не разобран (" + xmlFile + "): " + e.getMessage());
             return null;
         }
     }
@@ -191,6 +197,7 @@ public class SceneXmlParser {
                 }
                 String style = charElement.getAttribute("style"); // Read style attribute
                 String voice = charElement.getAttribute("voice"); // Read voice attribute
+                String sound = charElement.getAttribute("sound"); // Разовый звуковой эффект
                 String overlayAttr = charElement.getAttribute("overlay");
                 TextParseResult parsed = getTextContentWithClues(charElement);
 
@@ -201,12 +208,16 @@ public class SceneXmlParser {
                 frame.setSpeakerColor(color);
                 frame.setTextStyle(style); // Set style
                 frame.setVoicePath(voice); // Set voice path
+                if (sound != null && !sound.trim().isEmpty()) {
+                    frame.setSoundPath(sound.trim());
+                }
                 if (overlayAttr != null && !overlayAttr.trim().isEmpty()) {
                     frame.setOverlayText(overlayAttr.trim());
                     applyDarkBackgroundForOverlay(frame);
                 }
                 parseInputRequest(charElement, frame);
                 parseThemeSwitch(charElement, frame);
+                parseTitresCommand(charElement, frame);
                 parseChoices(charElement, frame);
                 frame.setEntryAnimations(stepAnimations);
                 frame.setNextSceneId(nextSceneId);
@@ -243,6 +254,29 @@ public class SceneXmlParser {
             frame.setInputRequestKey(key.trim());
             frame.setInputRequestPrompt(prompt != null && !prompt.isEmpty() ? prompt.trim() : "Введите значение:");
             break;
+        }
+    }
+
+    /**
+     * Ищет команду запуска финальных титров:
+     * {@code <command type="titres"/>} или {@code action="startTitles"}.
+     *
+     * @param charElement элемент персонажа
+     * @param frame       кадр, на котором отмечается запуск титров
+     */
+    private static void parseTitresCommand(Element charElement, SceneFrame frame) {
+        NodeList cmdList = charElement.getElementsByTagName("command");
+        for (int k = 0; k < cmdList.getLength(); k++) {
+            Element cmd = (Element) cmdList.item(k);
+            String action = cmd.getAttribute("action");
+            // историческое написание StartTitries сохранено: так пишут
+            // существующие сценарии
+            if ("titres".equals(cmd.getAttribute("type"))
+                    || "startTitles".equals(action)
+                    || "StartTitres".equals(action) || "StartTitries".equals(action)) {
+                frame.setStartTitles(true);
+                return;
+            }
         }
     }
 
@@ -360,7 +394,7 @@ public class SceneXmlParser {
     /**
      * Создаёт команду изменения состояния (флаг/репутация) по имени действия.
      * Имена соответствуют историческим командам сценария, включая опечатку
-     * {@code ReduceReputathion} — она встречается в существующих сценариях.
+     * {@code ReduceReputation} — она встречается в существующих сценариях.
      *
      * @param action имя действия из XML
      * @param target имя флага или персонажа
@@ -371,12 +405,50 @@ public class SceneXmlParser {
         StateCommand.Kind kind = switch (action) {
             case "SetFlag" -> StateCommand.Kind.SET_FLAG;
             case "SetReputation" -> StateCommand.Kind.SET_REPUTATION;
+            // опечатки *Reputathion сохранены намеренно: так написано
+            // в существующих сценариях, переименование сломало бы их
             case "AppendReputation", "AppendReputathion" -> StateCommand.Kind.ADD_REPUTATION;
             case "ReduceReputation", "ReduceReputathion" -> StateCommand.Kind.REDUCE_REPUTATION;
+            case "SetChoice" -> StateCommand.Kind.SET_CHOICE;
             default -> null;
         };
         if (kind == null) return null;
         return new StateCommand(kind, target, value);
+    }
+
+    /**
+     * Создаёт команду состояния из legacy-синтаксиса {@code target:action:value[:extra]}.
+     * Для {@code System:SetChoice:ключ:значение} значение лежит в четвёртой части.
+     *
+     * @param parts  разбитая по ':' команда
+     * @param target первая часть команды
+     * @param action имя действия
+     * @param value  третья часть команды
+     * @return команда состояния или null
+     */
+    private static AnimationCommand createLegacyStateCommand(String[] parts, String target,
+                                                             String action, String value) {
+        if ("SetChoice".equals(action)) {
+            return parts.length > 3 ? new StateCommand(StateCommand.Kind.SET_CHOICE, value, parts[3]) : null;
+        }
+        if ("SetFlag".equals(action)) {
+            return parts.length > 3 ? new StateCommand(StateCommand.Kind.SET_FLAG, value, parts[3]) : null;
+        }
+        if ("System".equals(target)) return null;
+        // репутационные команды: цель — имя персонажа в первой части
+        return createStateCommand(action, target, value);
+    }
+
+    /**
+     * Склеивает части команды обратно через ':' начиная с указанного индекса.
+     *
+     * @param parts частей команды
+     * @param from  индекс первой склеиваемой части
+     * @return склеенная строка (пустая, если частей нет)
+     */
+    private static String joinFrom(String[] parts, int from) {
+        if (parts.length <= from) return "";
+        return String.join(":", java.util.Arrays.copyOfRange(parts, from, parts.length));
     }
 
     private static void parseLegacyCommand(String cmdText, VisualState state, List<AnimationCommand> anims) {
@@ -387,6 +459,16 @@ public class SceneXmlParser {
         String action = parts[1];
         String value = parts.length > 2 ? parts[2] : "";
 
+        AnimationCommand legacyState = createLegacyStateCommand(parts, target, action, value);
+        if (legacyState != null) {
+            anims.add(legacyState);
+            return;
+        }
+        if ("Scene".equals(target) && "SoundEffect".equals(action)) {
+            // путь может содержать ':' (диск), поэтому склеиваем остаток
+            anims.add(new SoundCommand(joinFrom(parts, 2)));
+            return;
+        }
         if ("background".equals(target) && "changebackground".equals(action)) {
             state.setBackgroundPath(value);
         } else if ("showPerson".equals(action)) {

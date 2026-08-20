@@ -17,6 +17,7 @@ import javafx.scene.text.Text;
 import kz.aws.game.animation.ButtonAnimation;
 import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.utils.VirtualViewport;
+import kz.aws.game.utils.ResourceLocator;
 
 /**
  * FXML-контроллер диалога подтверждения (Да/Нет).
@@ -50,7 +51,7 @@ public class ConfirmDialogController extends StackPane {
      */
     private void loadFxml() {
         try {
-            File fxmlFile = new File(FXML_PATH);
+            File fxmlFile = ResourceLocator.file(FXML_PATH);
             URL fxmlUrl = fxmlFile.toURI().toURL();
             FXMLLoader loader = new FXMLLoader(fxmlUrl);
             loader.setRoot(this);

@@ -16,6 +16,10 @@ public class SceneFrame implements Serializable {
     private String speakerColor; // Hex or name
     private String textStyle; // CSS style class name
     private String voicePath; // Path to voiceover audio file
+    /** Разовый звуковой эффект кадра (дверь, выстрел); null — без эффекта. */
+    private String soundPath;
+    /** Запустить финальные титры при показе кадра. */
+    private boolean startTitles;
     /** Текст для полноэкранного затемнения (DimOverlay); null — без overlay. */
     private String overlayText;
     /** Ключ переменной для запроса ввода (имя игрока и др.); null — без запроса. */
@@ -31,6 +35,14 @@ public class SceneFrame implements Serializable {
     
     public String getVoicePath() { return voicePath; }
     public void setVoicePath(String voicePath) { this.voicePath = voicePath; }
+
+    /** Путь к разовому звуковому эффекту кадра; null — эффекта нет. */
+    public String getSoundPath() { return soundPath; }
+    public void setSoundPath(String soundPath) { this.soundPath = soundPath; }
+
+    /** true — при показе кадра запускаются финальные титры. */
+    public boolean isStartTitles() { return startTitles; }
+    public void setStartTitles(boolean startTitles) { this.startTitles = startTitles; }
     
     private List<ClueData> clues;
     private List<ChoiceOption> choices;
@@ -90,6 +102,8 @@ public class SceneFrame implements Serializable {
         copy.speakerColor = speakerColor;
         copy.textStyle = textStyle;
         copy.voicePath = voicePath;
+        copy.soundPath = soundPath;
+        copy.startTitles = startTitles;
         copy.overlayText = overlayText;
         copy.inputRequestKey = inputRequestKey;
         copy.inputRequestPrompt = inputRequestPrompt;

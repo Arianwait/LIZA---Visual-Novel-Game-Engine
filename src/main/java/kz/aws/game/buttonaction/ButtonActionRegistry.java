@@ -7,12 +7,16 @@ import java.util.Set;
 import org.reflections.Reflections;
 
 import kz.aws.game.appsettings.AppSettings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Регистр действий кнопок по id. Кнопки из Buttons.xml вызывают действие по id через {@link #run(String, AppSettings)}.
  * Новые действия: создай класс с {@link ButtonAction} и реализуй {@link ButtonActionHandler} в пакете {@code kz.aws.game.buttonaction} — регистрация автоматическая.
  */
 public final class ButtonActionRegistry {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ButtonActionRegistry.class);
 
     private static final String ACTION_PACKAGE = "kz.aws.game.buttonaction";
     private static final Map<String, ButtonActionHandler> HANDLERS = new HashMap<>();
@@ -55,7 +59,7 @@ public final class ButtonActionRegistry {
                 ButtonActionHandler handler = (ButtonActionHandler) c.getConstructor().newInstance();
                 register(ann.value(), handler);
             } catch (Exception e) {
-                System.err.println("ButtonActionRegistry: could not register " + c.getSimpleName() + ": " + e.getMessage());
+                LOG.error("ButtonActionRegistry: could not register " + c.getSimpleName() + ": " + e.getMessage());
             }
         }
         discovered = true;

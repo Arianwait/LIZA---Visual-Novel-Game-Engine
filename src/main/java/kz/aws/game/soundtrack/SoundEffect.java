@@ -7,6 +7,8 @@ import java.util.List;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import kz.aws.game.appsettings.AppSettings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Разовые звуковые эффекты (выстрел, скрип двери и т.п.).
@@ -15,6 +17,8 @@ import kz.aws.game.appsettings.AppSettings;
  * одновременно — новый не обрывает предыдущий.
  */
 public final class SoundEffect {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SoundEffect.class);
 
     /** Активные эффекты — держим ссылки, чтобы GC не собрал плеер во время игры. */
     private static final List<MediaPlayer> activePlayers = new ArrayList<>();
@@ -33,13 +37,13 @@ public final class SoundEffect {
     public static MediaPlayer startSound(AppSettings appSettings, String audioFilePath) {
         File file = new File(audioFilePath);
         if (!file.isFile()) {
-            System.err.println("SoundEffect: файл не найден — " + audioFilePath);
+            LOG.error("SoundEffect: файл не найден — " + audioFilePath);
             return null;
         }
         try {
             return createPlayer(appSettings, file);
         } catch (RuntimeException e) {
-            System.err.println("SoundEffect: не удалось воспроизвести " + audioFilePath
+            LOG.error("SoundEffect: не удалось воспроизвести " + audioFilePath
                     + " — " + e.getMessage());
             return null;
         }

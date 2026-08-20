@@ -16,16 +16,16 @@ import kz.aws.game.engine.GameEngine;
 import kz.aws.game.scenedetails.DialogPanel;
 
 public  class SceneInfo {
-	private static int Cliker = 0;
+	private static int Clicker = 0;
 	private static EventHandler<MouseEvent> mouseClickHandler;
 	private static String background = "";
 	private static String music = "";
-	private static EventHandler<ActionEvent> EventBack;
+	private static EventHandler<ActionEvent> backHandler;
 	private static List<Map<String, String>> dialogList = new ArrayList<>();
 	private static final int MAX_SIZE = 7; // Максимальное количество элементов
 	private static List<String> choiceList = new ArrayList<>();; // Список выборов
 	private static Node buttons = new HBox();
-	private static DialogPanel tableDatail;
+	private static DialogPanel dialogPanel;
 	private static boolean handlerEnabled = true;
 	private static AppSettings appSettings;
 	private static GameEngine gameEngine;
@@ -101,20 +101,20 @@ public  class SceneInfo {
         dialogList.clear();
     }
     
-	public static void setEventBack(EventHandler<ActionEvent> EventBack) {
-		SceneInfo.EventBack = EventBack;
+	public static void setBackHandler(EventHandler<ActionEvent> backHandler) {
+		SceneInfo.backHandler = backHandler;
 	}
 	
-	public static EventHandler<ActionEvent> getEventBack() {
-		return EventBack;
+	public static EventHandler<ActionEvent> getBackHandler() {
+		return backHandler;
 	}	
 	
-	public static void setCliker(int Cliker) {
-		SceneInfo.Cliker = Cliker;
+	public static void setClicker(int Clicker) {
+		SceneInfo.Clicker = Clicker;
 	}
 	
-	public static int getCliker() {
-		return Cliker;
+	public static int getClicker() {
+		return Clicker;
 	}	
 	
 	public static void setEventHandler(EventHandler<MouseEvent> mouseClickHandler) {
@@ -166,11 +166,11 @@ public  class SceneInfo {
 	}	
 	
     
-    public static void setTableDatail(DialogPanel tableDatail) {
-    	SceneInfo.tableDatail = tableDatail;
+    public static void setDialogPanel(DialogPanel dialogPanel) {
+    	SceneInfo.dialogPanel = dialogPanel;
     }
 
-    public static DialogPanel getTableDatail() {
-    	return tableDatail;
+    public static DialogPanel getDialogPanel() {
+    	return dialogPanel;
     }
 }

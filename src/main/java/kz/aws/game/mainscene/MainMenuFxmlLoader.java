@@ -4,6 +4,7 @@ import java.io.File;
 import java.net.URL;
 
 import javafx.fxml.FXMLLoader;
+import kz.aws.game.utils.ResourceLocator;
 
 /**
  * Загрузчик FXML для главного меню. Загружает lib/fxml/main-menu.fxml
@@ -23,7 +24,7 @@ public final class MainMenuFxmlLoader {
      */
     public static void loadInto(MainMenuController controller) {
         try {
-            File fxmlFile = new File(FXML_PATH);
+            File fxmlFile = ResourceLocator.file(FXML_PATH);
             URL fxmlUrl = fxmlFile.toURI().toURL();
             FXMLLoader loader = new FXMLLoader(fxmlUrl);
             loader.setRoot(controller);

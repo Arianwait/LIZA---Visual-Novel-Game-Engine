@@ -9,12 +9,13 @@ import javafx.util.Duration;
 import kz.aws.game.actionscenarios.ShowMainMenu;
 import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.utils.VirtualViewport;
+import kz.aws.game.utils.ResourceLocator;
 
 /**
  * Финальные титры: текст из lib/titries.txt проезжает по экрану снизу вверх,
  * после чего открывается главное меню.
  */
-public class TitresAnimation{
+public class TitlesAnimation{
 
     /**
      * Запускает анимацию титров.
@@ -29,7 +30,7 @@ public class TitresAnimation{
         try {
             // Чтение текста из файла (UTF-8: титры на русском)
             titres.setText(java.nio.file.Files.readString(
-                    java.nio.file.Path.of("lib/titries.txt"),
+                    ResourceLocator.resolve("lib/titries.txt"),
                     java.nio.charset.StandardCharsets.UTF_8));
 
             // Создание анимации для титров с задержкой и увеличенной продолжительностью
@@ -46,9 +47,8 @@ public class TitresAnimation{
 
             transition.play();
         } catch (IOException e) {
-            e.printStackTrace();
         }
         
-        appSettings.getStagePain().show();
+        appSettings.getStage().show();
     }
 }

@@ -10,7 +10,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
-import kz.aws.game.dispetcher.GameDispetcher;
+import kz.aws.game.dispatcher.GameDispatcher;
 
 @SuppressWarnings("deprecation")
 public interface AppSettings {
@@ -27,17 +27,17 @@ public interface AppSettings {
 
     void setFullscreen(boolean fullscreen);
 
-    void setStagePain(Stage primaryStage);
+    void setStage(Stage primaryStage);
     
     void setScene(Scene scene);
     
     void setRoot(StackPane root);
     
-    void setGamedispetcher(GameDispetcher gameDispetcher);
+    void setGamedispetcher(GameDispatcher gameDispetcher);
     
-    Stage getStagePain();
+    Stage getStage();
     
-    GameDispetcher getGamedispetcher();
+    GameDispatcher getGamedispetcher();
     
     Scene getScene();
     
@@ -61,7 +61,7 @@ public interface AppSettings {
 
 	void updateSettings();
 
-	void setVolumeValue(Double volumValue);
+	void setVolumeValue(Double volumeValue);
 
 	Double getVolumeValue();
 

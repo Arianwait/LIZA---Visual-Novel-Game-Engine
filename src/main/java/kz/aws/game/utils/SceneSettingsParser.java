@@ -6,11 +6,15 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Парсер для настроек сцен из XML
  */
 public class SceneSettingsParser {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SceneSettingsParser.class);
     private static SceneSettings settings;
     private static boolean initialized = false;
 
@@ -18,9 +22,9 @@ public class SceneSettingsParser {
         if (initialized) return;
         
         try {
-            File xmlFile = new File("lib/config/UI/SceneSettings.xml");
+            File xmlFile = ResourceLocator.file("lib/config/UI/SceneSettings.xml");
             if (!xmlFile.exists()) {
-                System.err.println("SceneSettings config not found: " + xmlFile.getAbsolutePath());
+                LOG.error("SceneSettings config not found: " + xmlFile.getAbsolutePath());
                 // Используем значения по умолчанию
                 settings = new SceneSettings();
                 initialized = true;
@@ -119,8 +123,7 @@ public class SceneSettingsParser {
             
             initialized = true;
         } catch (Exception e) {
-            System.err.println("Error parsing SceneSettings config: " + e.getMessage());
-            e.printStackTrace();
+            LOG.error("Error parsing SceneSettings config: " + e.getMessage());
             // Используем значения по умолчанию
             settings = new SceneSettings();
             initialized = true;

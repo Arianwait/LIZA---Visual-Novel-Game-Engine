@@ -5,8 +5,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javafx.scene.media.AudioClip;
+import kz.aws.game.utils.ResourceLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SoundManager {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SoundManager.class);
     private static final Map<String, AudioClip> clips = new HashMap<>();
 
     // Preload common sounds
@@ -18,15 +23,14 @@ public class SoundManager {
 
     public static void loadSound(String name, String path) {
         try {
-            File file = new File(path);
+            File file = ResourceLocator.file(path);
             if (file.exists()) {
                 AudioClip clip = new AudioClip(file.toURI().toString());
                 clips.put(name, clip);
             } else {
-                System.err.println("Sound file not found: " + path);
+                LOG.error("Sound file not found: " + path);
             }
         } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
@@ -71,7 +75,7 @@ public class SoundManager {
             currentVoiceClip.play();
             
         } catch (Exception e) {
-            System.err.println("Failed to play voice: " + path + " (" + e.getMessage() + ")");
+            LOG.error("Failed to play voice: " + path + " (" + e.getMessage() + ")");
         }
     }
     

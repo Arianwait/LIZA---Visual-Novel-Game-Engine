@@ -6,11 +6,15 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Парсер для конфигурации главного меню из XML
  */
 public class MainMenuConfigParser {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MainMenuConfigParser.class);
     private static MainMenuConfig config;
     private static boolean initialized = false;
 
@@ -18,9 +22,9 @@ public class MainMenuConfigParser {
         if (initialized) return;
         
         try {
-            File xmlFile = new File("lib/config/UI/MainMenu.xml");
+            File xmlFile = ResourceLocator.file("lib/config/UI/MainMenu.xml");
             if (!xmlFile.exists()) {
-                System.err.println("MainMenu config not found: " + xmlFile.getAbsolutePath());
+                LOG.error("MainMenu config not found: " + xmlFile.getAbsolutePath());
                 // Используем значения по умолчанию
                 config = new MainMenuConfig();
                 initialized = true;
@@ -89,8 +93,7 @@ public class MainMenuConfigParser {
             
             initialized = true;
         } catch (Exception e) {
-            System.err.println("Error parsing MainMenu config: " + e.getMessage());
-            e.printStackTrace();
+            LOG.error("Error parsing MainMenu config: " + e.getMessage());
             // Используем значения по умолчанию
             config = new MainMenuConfig();
             initialized = true;

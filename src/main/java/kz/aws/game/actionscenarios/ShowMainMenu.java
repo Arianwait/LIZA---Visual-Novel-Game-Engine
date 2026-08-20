@@ -28,7 +28,7 @@ public class ShowMainMenu {
      */
     public static void initializeMainMenuScene(AppSettings appSettings) {
         appSettings.getRoot().setOnMouseClicked(null);
-        primaryStage = appSettings.getStagePain();
+        primaryStage = appSettings.getStage();
 
         leaveGameSession();
         SceneRenderer.clearSceneCache();
@@ -43,7 +43,6 @@ public class ShowMainMenu {
             appSettings.getMediaPlayer().play();
             SceneInfo.setMusic(musicPath);
         } catch (Exception e) {
-            e.printStackTrace();
         }
 
         VBox contentPane = new VBox();

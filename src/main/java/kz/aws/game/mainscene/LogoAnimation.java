@@ -12,12 +12,17 @@ import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.utils.MenuResourceCache;
 import kz.aws.game.utils.ThemesConfigParser;
 import kz.aws.game.utils.VirtualViewport;
+import kz.aws.game.utils.ResourceLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Стартовая анимация логотипа: fade-in/fade-out поверх чёрного фона,
  * параллельно предзагружает ресурсы меню, затем открывает главное меню.
  */
 public class LogoAnimation extends StackPane {
+
+    private static final Logger LOG = LoggerFactory.getLogger(LogoAnimation.class);
 
     public LogoAnimation(AppSettings appSettings) {
         // Загрузка изображения логотипа
@@ -29,12 +34,12 @@ public class LogoAnimation extends StackPane {
         if (theme != null && theme.getBackground() != null && !theme.getBackground().isEmpty()) {
             themeBg = theme.getBackground();
         }
-        System.out.println("Starting MENU resources preload during logo animation...");
+        LOG.info("Starting MENU resources preload during logo animation...");
         MenuResourceCache.preloadMenuResources(themeBg);
         
-        Image logoImage = MenuResourceCache.getImage("file:lib/Logo/logo.png");
+        Image logoImage = MenuResourceCache.getImage(ResourceLocator.url("lib/Logo/logo.png"));
         if (logoImage == null) {
-            logoImage = new Image("file:lib/Logo/logo.png");
+            logoImage = new Image(ResourceLocator.url("lib/Logo/logo.png"));
         }
         
         ImageView logoImageView = new ImageView(logoImage);
@@ -72,7 +77,7 @@ public class LogoAnimation extends StackPane {
         });
 
         fadeOutTransition.setOnFinished(event -> {
-            System.out.println("Logo animation finished. Menu resources preloaded: " + MenuResourceCache.isPreloaded());
+            LOG.info("Logo animation finished. Menu resources preloaded: " + MenuResourceCache.isPreloaded());
             ShowMainMenu.initializeMainMenuScene(appSettings);
         });
 
@@ -88,7 +93,7 @@ public class LogoAnimation extends StackPane {
             fadeOut.play();
         } else {
             // Проверяем снова через 100мс
-            // System.out.println("Waiting for menu resources..."); // Слишком много спама
+            // LOG.info("Waiting for menu resources..."); // Слишком много спама
             PauseTransition pause = new PauseTransition(Duration.millis(100));
             pause.setOnFinished(e -> waitForResourcesAndFadeOut(fadeOut));
             pause.play();

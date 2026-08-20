@@ -8,6 +8,7 @@ import javafx.scene.Scene;
 import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.utils.SceneSettingsParser;
 import kz.aws.game.utils.SceneSettingsParser.SceneSettings;
+import kz.aws.game.utils.ResourceLocator;
 
 /**
  * Фабрика для создания панели диалога из FXML.
@@ -31,7 +32,7 @@ public final class DialogPanelFactory {
      */
     public static DialogPanelController create(AppSettings appSettings, Scene scene) {
         try {
-            File fxmlFile = new File(FXML_PATH);
+            File fxmlFile = ResourceLocator.file(FXML_PATH);
             URL fxmlUrl = fxmlFile.toURI().toURL();
 
             FXMLLoader loader = new FXMLLoader(fxmlUrl);

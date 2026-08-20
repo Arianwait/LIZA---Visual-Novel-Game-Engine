@@ -12,6 +12,9 @@ import javafx.scene.layout.VBox;
 import kz.aws.game.utils.AssetPreloader;
 import kz.aws.game.utils.MenuResourceCache;
 import kz.aws.game.utils.VirtualViewport;
+import kz.aws.game.utils.ResourceLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Экран загрузки: логотип, прогресс-бар и статус. Показывается поверх
@@ -19,6 +22,8 @@ import kz.aws.game.utils.VirtualViewport;
  * Все размеры — в пикселях дизайн-разрешения {@link VirtualViewport}.
  */
 public class LoadingScreen {
+
+    private static final Logger LOG = LoggerFactory.getLogger(LoadingScreen.class);
 
     private final StackPane root;
     private final ProgressBar progressBar;
@@ -36,9 +41,9 @@ public class LoadingScreen {
         VBox content = new VBox(20);
         content.setAlignment(Pos.CENTER);
 
-        Image logoImage = MenuResourceCache.getImage("file:lib/Logo/logo.png");
+        Image logoImage = MenuResourceCache.getImage(ResourceLocator.url("lib/Logo/logo.png"));
         if (logoImage == null) {
-            logoImage = new Image("file:lib/Logo/logo.png");
+            logoImage = new Image(ResourceLocator.url("lib/Logo/logo.png"));
         }
         logoImageView = new ImageView(logoImage);
         logoImageView.setPreserveRatio(true);
@@ -89,8 +94,7 @@ public class LoadingScreen {
         });
         
         task.setOnFailed(e -> {
-            System.err.println("Loading failed: " + task.getException().getMessage());
-            task.getException().printStackTrace();
+            LOG.error("Loading failed", task.getException());
             // Proceed anyway or show error? For now proceed.
             if (onFinished != null) onFinished.run();
         });

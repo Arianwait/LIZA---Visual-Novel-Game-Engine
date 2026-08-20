@@ -1,4 +1,4 @@
-package kz.aws.game.dispetcher;
+package kz.aws.game.dispatcher;
 
 import java.io.Serializable;
 import java.util.List;
@@ -16,13 +16,18 @@ import kz.aws.game.engine.parser.ScenarioValidator;
 import kz.aws.game.engine.parser.SceneXmlParser;
 import kz.aws.game.mainscene.LogoAnimation;
 import kz.aws.game.utils.VirtualViewport;
+import kz.aws.game.utils.ResourceLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Точка входа приложения. Создаёт Stage и Scene, разворачивает
  * {@link VirtualViewport}: весь интерфейс живёт в контейнере фиксированного
  * дизайн-разрешения и масштабируется под реальный размер окна одним трансформом.
  */
-public class GameDispetcher extends Application implements Serializable {
+public class GameDispatcher extends Application implements Serializable {
+
+    private static final Logger LOG = LoggerFactory.getLogger(GameDispatcher.class);
 
 	private static final long serialVersionUID = 8222725889624267118L;
 
@@ -36,6 +41,10 @@ public class GameDispetcher extends Application implements Serializable {
 	 * @param args аргументы командной строки
 	 */
 	public static void main(String[] args) {
+		// логи кладём рядом с игрой, а не в случайную рабочую директорию
+		System.setProperty("liza.logs",
+				ResourceLocator.resolve("logs").toString());
+
 		if (args.length > 0 && VALIDATE_FLAG.equals(args[0])) {
 			System.exit(validateScenario());
 			return;
@@ -53,14 +62,14 @@ public class GameDispetcher extends Application implements Serializable {
 		List<String> problems = new java.util.ArrayList<>(ScenarioValidator.validate(scenes));
 		problems.addAll(ScenarioValidator.validateCommands(SceneXmlParser.getScenarioPath()));
 
-		System.out.println("Проверка сценария: сцен загружено — " + scenes.size());
+		LOG.info("Проверка сценария: сцен загружено — " + scenes.size());
 		if (problems.isEmpty()) {
-			System.out.println("Проблем не найдено.");
+			LOG.info("Проблем не найдено.");
 			return 0;
 		}
-		System.out.println("Найдено проблем: " + problems.size());
+		LOG.info("Найдено проблем: " + problems.size());
 		for (String problem : problems) {
-			System.out.println("  " + problem);
+			LOG.info("  " + problem);
 		}
 		return 1;
 	}
@@ -75,13 +84,16 @@ public class GameDispetcher extends Application implements Serializable {
 	 */
 	@Override
 	public void start(Stage primaryStage) {
-		primaryStage.getIcons().add(new Image("file:lib/Logo/logo.png"));
+		// без ресурсов игра покажет чёрный экран — сообщаем причину сразу
+		ResourceLocator.exists("lib/Scene");
+
+		primaryStage.getIcons().add(new Image(ResourceLocator.url("lib/Logo/logo.png")));
 		primaryStage.setTitle("Innagano");
 		primaryStage.setResizable(false);
 
 		AppSettings appSettings = JsonParser.readConfig();
 		appSettings.setGamedispetcher(this);
-		appSettings.setStagePain(primaryStage);
+		appSettings.setStage(primaryStage);
 
 		VirtualViewport viewport = new VirtualViewport();
 		appSettings.setRoot(viewport.getContentRoot());
@@ -91,7 +103,7 @@ public class GameDispetcher extends Application implements Serializable {
 		appSettings.setScene(scene);
 		viewport.bindTo(scene);
 
-		scene.getStylesheets().add("file:lib/config/style.css");
+		scene.getStylesheets().add(ResourceLocator.url("lib/config/style.css"));
 
 		appSettings.getRoot().getChildren().add(new LogoAnimation(appSettings));
 

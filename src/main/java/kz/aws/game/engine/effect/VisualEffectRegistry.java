@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Реестр визуальных эффектов. Автоматически находит и регистрирует
@@ -16,6 +18,8 @@ import org.reflections.Reflections;
  * пометить {@link VisualEffect @VisualEffect("myEffect")} — регистрация автоматическая.
  */
 public final class VisualEffectRegistry {
+
+    private static final Logger LOG = LoggerFactory.getLogger(VisualEffectRegistry.class);
 
     private static final String EFFECT_PACKAGE = "kz.aws.game.engine.effect";
     private static final Map<String, VisualEffectPlayer> PLAYERS = new HashMap<>();
@@ -62,7 +66,7 @@ public final class VisualEffectRegistry {
             VisualEffectPlayer player = (VisualEffectPlayer) c.getConstructor().newInstance();
             PLAYERS.put(ann.value(), player);
         } catch (Exception e) {
-            System.err.println("VisualEffectRegistry: ошибка создания " + c.getSimpleName() + ": " + e.getMessage());
+            LOG.error("VisualEffectRegistry: ошибка создания " + c.getSimpleName() + ": " + e.getMessage());
         }
     }
 
