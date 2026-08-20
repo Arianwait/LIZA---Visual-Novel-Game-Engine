@@ -57,7 +57,17 @@ public class SceneXmlParser {
      * @return карта id сцены → кадры; пустая, если файл не найден или нечитаем
      */
     public static Map<Integer, List<SceneFrame>> parseAllScenes() {
-        Document doc = loadScenarioDocument();
+        return parseScenesFrom(getScenarioPath());
+    }
+
+    /**
+     * Разбирает сцены из указанного файла сценария.
+     *
+     * @param scenarioPath путь к XML-файлу
+     * @return карта id сцены → кадры; пустая, если файл не найден или нечитаем
+     */
+    public static Map<Integer, List<SceneFrame>> parseScenesFrom(String scenarioPath) {
+        Document doc = loadScenarioDocument(scenarioPath);
         if (doc == null) return new HashMap<>();
 
         Map<Integer, List<SceneFrame>> allScenes = new HashMap<>();
@@ -99,17 +109,15 @@ public class SceneXmlParser {
     }
 
     /**
-     * Загружает XML-документ сценария (основной файл или запасной).
+     * Загружает XML-документ сценария.
      *
+     * @param scenarioPath путь к файлу сценария
      * @return документ или null, если файл отсутствует либо не разбирается
      */
-    private static Document loadScenarioDocument() {
-        File xmlFile = new File(SCENARIO_PATH);
+    private static Document loadScenarioDocument(String scenarioPath) {
+        File xmlFile = new File(scenarioPath);
         if (!xmlFile.exists()) {
-            xmlFile = new File(LEGACY_SCENARIO_PATH);
-        }
-        if (!xmlFile.exists()) {
-            System.err.println("Файл сценария не найден: " + SCENARIO_PATH);
+            System.err.println("Файл сценария не найден: " + scenarioPath);
             return null;
         }
         try {
