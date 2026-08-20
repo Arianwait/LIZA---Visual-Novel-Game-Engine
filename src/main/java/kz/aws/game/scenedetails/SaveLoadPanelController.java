@@ -348,6 +348,11 @@ public class SaveLoadPanelController extends VBox {
      * @param sceneId  id сцены
      */
     private void executeLoad(String fileName, int sceneId) {
+        // root пересоздаётся целиком: закрываем паузу штатно, иначе её
+        // статический флаг opened остался бы true и Esc перестал бы работать
+        GamePauseMenuController.closeCurrent();
+        GamePauseMenuController.resetState();
+
         LoadingScreen loadingScreen = new LoadingScreen();
         appSettings.getRoot().getChildren().setAll(loadingScreen.getRoot());
         appSettings.applyThemeToRoot();

@@ -337,6 +337,8 @@ public class GameEngine {
         isFinished = false;
         currentSceneId = sceneId;
         currentFrameIndex = 0;
+        // звук предыдущей сцены не должен тянуться в новую
+        SoundEffect.stopAll();
 
         SceneFrame script = frames.get(0);
         SceneFrame display = present(script);

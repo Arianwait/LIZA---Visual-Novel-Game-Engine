@@ -13,7 +13,9 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.media.MediaPlayer;
 import javafx.util.Duration;
+import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.engine.effect.VisualEffectPlayer;
 import kz.aws.game.engine.effect.VisualEffectRegistry;
 import kz.aws.game.engine.model.CharacterState;
@@ -24,7 +26,9 @@ import kz.aws.game.engine.model.VisualState;
 import kz.aws.game.engine.resources.CharacterLibrary;
 import kz.aws.game.scenedetails.DimOverlay;
 import kz.aws.game.scenedetails.DialogPanel;
+import kz.aws.game.scenelist.DialogList;
 import kz.aws.game.scenelist.SceneInfo;
+import kz.aws.game.soundtrack.Soundtrack;
 import kz.aws.game.soundtrack.SoundManager;
 import kz.aws.game.utils.ImageViewPool;
 import kz.aws.game.utils.VariableSubstitution;
@@ -217,9 +221,38 @@ public class SceneRenderer {
             applyVisualState(frame.getVisualState());
         }
 
+        applySceneMusic(frame.getVisualState());
+
         Map<String, String> playerVars = getPlayerVariables();
         updateOverlay(frame, playerVars);
         updateDialogText(frame, playerVars, animate);
+    }
+
+    /**
+     * Переключает фоновую музыку, если путь изменился с прошлого кадра.
+     * Повторный трек не перезапускается — иначе музыка обрывалась бы
+     * на каждой реплике.
+     *
+     * @param state визуальное состояние кадра
+     */
+    private void applySceneMusic(VisualState state) {
+        if (state == null) return;
+        String musicPath = state.getMusicPath();
+        if (musicPath == null || musicPath.isEmpty()) return;
+        if (musicPath.equals(SceneInfo.getMusic())) return;
+
+        AppSettings appSettings = SceneInfo.getAppSettings();
+        if (appSettings == null) return;
+
+        try {
+            MediaPlayer player = Soundtrack.startSound(appSettings, musicPath);
+            appSettings.setMediaPlayer(player);
+            player.play();
+            SceneInfo.setMusic(musicPath);
+        } catch (RuntimeException e) {
+            System.err.println("Не удалось включить музыку сцены (" + musicPath
+                    + "): " + e.getMessage());
+        }
     }
 
     // ── Инициализация ──────────────────────────────────────────────
@@ -375,8 +408,34 @@ public class SceneRenderer {
             SoundManager.playVoice(frame.getVoicePath());
         }
 
+        recordDialogInJournal(name, text, frame.getSpeakerColor());
+
         tableDetail.updateStyle(frame.getTextStyle());
         tableDetail.resetNameColor();
+    }
+
+    /**
+     * Записывает реплику в журнал диалогов (панель истории по Tab).
+     * Повтор той же реплики подряд не добавляется — иначе back/redo
+     * плодил бы дубли.
+     *
+     * @param name  имя говорящего с подставленными переменными
+     * @param text  текст реплики с подставленными переменными
+     * @param color цвет имени персонажа
+     */
+    private void recordDialogInJournal(String name, String text, String color) {
+        if (text == null || text.isEmpty()) return;
+
+        List<DialogList.DialogEntry> dialogs = DialogList.getAllDialogs();
+        if (!dialogs.isEmpty()) {
+            DialogList.DialogEntry last = dialogs.get(dialogs.size() - 1);
+            if (text.equals(last.getDialogText())
+                    && java.util.Objects.equals(name, last.getCharacterName())) {
+                return;
+            }
+        }
+        String nameColor = (color != null && !color.isEmpty()) ? color : "#ffcc00";
+        DialogList.addDialog(name, nameColor, text, "white");
     }
 
     /**
