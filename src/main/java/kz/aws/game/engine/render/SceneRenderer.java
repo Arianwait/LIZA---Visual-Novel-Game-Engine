@@ -33,6 +33,8 @@ import kz.aws.game.soundtrack.SoundManager;
 import kz.aws.game.utils.ImageViewPool;
 import kz.aws.game.utils.VariableSubstitution;
 import kz.aws.game.utils.VirtualViewport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Рендерит кадры сцены: фон, персонажи, overlay, текст, визуальные эффекты.
@@ -42,6 +44,8 @@ import kz.aws.game.utils.VirtualViewport;
  * только к игровой сцене, не затрагивая UI.
  */
 public class SceneRenderer {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SceneRenderer.class);
     // ConcurrentHashMap: AssetPreloader пишет в кеш из фонового потока,
     // пока FX-поток читает его при рендере
     private static final Map<String, Image> imageCache = new java.util.concurrent.ConcurrentHashMap<>();
@@ -79,7 +83,7 @@ public class SceneRenderer {
     public static void clearSceneCache() {
         int sizeBefore = imageCache.size();
         imageCache.clear();
-        System.out.println("Scene cache cleared. Freed " + sizeBefore + " images from memory.");
+        LOG.info("Scene cache cleared. Freed " + sizeBefore + " images from memory.");
     }
 
     /**
@@ -250,7 +254,7 @@ public class SceneRenderer {
             player.play();
             SceneInfo.setMusic(musicPath);
         } catch (RuntimeException e) {
-            System.err.println("Не удалось включить музыку сцены (" + musicPath
+            LOG.error("Не удалось включить музыку сцены (" + musicPath
                     + "): " + e.getMessage());
         }
     }
@@ -498,7 +502,7 @@ public class SceneRenderer {
              updateBackground(newState.getBackgroundPath());
         }
 
-        System.out.println("ANIMATE: characterViews=" + characterViews.keySet()
+        LOG.info("ANIMATE: characterViews=" + characterViews.keySet()
                 + " | oldChars=" + oldState.getCharacters().entrySet().stream()
                     .map(e -> e.getKey() + ":" + e.getValue().isVisible())
                     .collect(java.util.stream.Collectors.joining(","))
@@ -523,7 +527,7 @@ public class SceneRenderer {
 
             boolean logicallyVisibleInOld = oldState.getCharacters().containsKey(name) && oldState.getCharacter(name).isVisible();
 
-            System.out.println("ANIMATE: REMOVING " + name + " visibleInNew=" + visibleInNew
+            LOG.info("ANIMATE: REMOVING " + name + " visibleInNew=" + visibleInNew
                     + " logicallyVisibleInOld=" + logicallyVisibleInOld);
 
             if (logicallyVisibleInOld) {
@@ -675,7 +679,7 @@ public class SceneRenderer {
                 image = new Image(path, 0, 0, true, true, true);
                 imageCache.put(path, image);
             } catch (Exception e) {
-                System.err.println("Could not load image: " + path);
+                LOG.error("Could not load image: " + path);
             }
         }
         return image;
@@ -691,26 +695,25 @@ public class SceneRenderer {
         String normalizedPath = path.replace("\\", "/");
         String fullPath = normalizedPath.startsWith("file:") ? normalizedPath : "file:" + normalizedPath;
 
-        System.out.println("DEBUG: Loading background: " + fullPath);
+        LOG.info("DEBUG: Loading background: " + fullPath);
 
         try {
             Image bgImage = imageCache.get(fullPath);
             if (bgImage == null) {
-                System.out.println("DEBUG: Cache miss. Loading synchronously...");
+                LOG.info("DEBUG: Cache miss. Loading synchronously...");
                 bgImage = new Image(fullPath, 0, 0, true, true, false);
                 imageCache.put(fullPath, bgImage);
             }
 
             if (bgImage.isError()) {
-                 System.err.println("DEBUG: Image load error for " + fullPath + ": " + bgImage.getException());
+                 LOG.error("DEBUG: Image load error for " + fullPath + ": " + bgImage.getException());
             } else {
-                 System.out.println("DEBUG: Image loaded successfully. W=" + bgImage.getWidth() + " H=" + bgImage.getHeight());
+                 LOG.info("DEBUG: Image loaded successfully. W=" + bgImage.getWidth() + " H=" + bgImage.getHeight());
             }
 
             applyBackgroundImage(bgImage);
         } catch (Exception e) {
-             System.err.println("Failed to load background: " + fullPath);
-             e.printStackTrace();
+             LOG.error("Failed to load background: " + fullPath);
         }
     }
 
@@ -721,20 +724,20 @@ public class SceneRenderer {
      */
     private void applyBackgroundImage(Image bgImage) {
         if (backgroundView == null) {
-            System.err.println("DEBUG: backgroundView is NULL!");
+            LOG.error("DEBUG: backgroundView is NULL!");
             return;
         }
         backgroundView.setImage(bgImage);
         if (!sceneContentLayer.getChildren().contains(backgroundView)) {
-            System.err.println("DEBUG: backgroundView is NOT in sceneContentLayer!");
+            LOG.error("DEBUG: backgroundView is NOT in sceneContentLayer!");
             sceneContentLayer.getChildren().add(0, backgroundView);
         }
         backgroundView.toBack();
         backgroundView.setVisible(true);
         sceneContentLayer.toBack();
-        System.out.println("DEBUG: Background set. Visible=" + backgroundView.isVisible()
+        LOG.info("DEBUG: Background set. Visible=" + backgroundView.isVisible()
                 + " Opacity=" + backgroundView.getOpacity());
-        System.out.println("DEBUG: Root Children Count: " + root.getChildren().size());
+        LOG.info("DEBUG: Root Children Count: " + root.getChildren().size());
     }
 
     /**

@@ -11,8 +11,12 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ChapterConfigParser {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ChapterConfigParser.class);
     private static List<Chapter> chapters = new ArrayList<>();
     private static boolean initialized = false;
 
@@ -23,7 +27,7 @@ public class ChapterConfigParser {
             // Path updated to match file location: lib/config/Chapters.xml
             File xmlFile = ResourceLocator.file("lib/config/Chapters.xml");
             if (!xmlFile.exists()) {
-                System.err.println("Chapter Config not found: " + xmlFile.getAbsolutePath());
+                LOG.error("Chapter Config not found: " + xmlFile.getAbsolutePath());
                 return;
             }
 
@@ -66,7 +70,6 @@ public class ChapterConfigParser {
             }
             initialized = true;
         } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 

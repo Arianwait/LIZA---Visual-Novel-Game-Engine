@@ -11,10 +11,14 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import kz.aws.game.utils.ResourceLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @SuppressWarnings("deprecation")
 public class JsonParser  implements Serializable {
+
+    private static final Logger LOG = LoggerFactory.getLogger(JsonParser.class);
 	/**
 	 * 
 	 */
@@ -30,7 +34,7 @@ public class JsonParser  implements Serializable {
             JSONObject jsonObject = (JSONObject) obj;
             appSettings.updateSettings(jsonObject);
         } catch (IOException | ParseException | RuntimeException e) {
-            System.err.println("Настройки не прочитаны (" + filePath + "): " + e.getMessage()
+            LOG.error("Настройки не прочитаны (" + filePath + "): " + e.getMessage()
                     + " — используются значения по умолчанию");
         }
 

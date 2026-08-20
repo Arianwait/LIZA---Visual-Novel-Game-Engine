@@ -12,12 +12,16 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.scenelist.SceneInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Регистр панелей по id. Панели из Panels.xml показываются через {@link #show(String, AppSettings)}.
  * Сканируются только panel и mainscene (MainMenuController, SettingsMenuController, SceneSelection).
  */
 public final class PanelRegistry {
+
+    private static final Logger LOG = LoggerFactory.getLogger(PanelRegistry.class);
 
     private static final String[] SCAN_PACKAGES = { "kz.aws.game.panel", "kz.aws.game.mainscene" };
     private static final Map<String, PanelHandler> HANDLERS = new HashMap<>();
@@ -79,28 +83,22 @@ public final class PanelRegistry {
 							return (Node) c.getConstructor(AppSettings.class).newInstance(appSettings);
 						} catch (InstantiationException e) {
 							// TODO Auto-generated catch block
-							e.printStackTrace();
 						} catch (IllegalAccessException e) {
 							// TODO Auto-generated catch block
-							e.printStackTrace();
 						} catch (IllegalArgumentException e) {
 							// TODO Auto-generated catch block
-							e.printStackTrace();
 						} catch (InvocationTargetException e) {
 							// TODO Auto-generated catch block
-							e.printStackTrace();
 						} catch (NoSuchMethodException e) {
 							// TODO Auto-generated catch block
-							e.printStackTrace();
 						} catch (SecurityException e) {
 							// TODO Auto-generated catch block
-							e.printStackTrace();
 						}
 						return null;
 					};
                     register(ann.value(), handler);
                 } catch (Exception e) {
-                    System.err.println("PanelRegistry: could not register " + c.getSimpleName() + ": " + e.getMessage());
+                    LOG.error("PanelRegistry: could not register " + c.getSimpleName() + ": " + e.getMessage());
                 }
             }
         }

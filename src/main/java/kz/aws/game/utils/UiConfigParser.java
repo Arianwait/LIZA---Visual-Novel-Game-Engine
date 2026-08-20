@@ -12,8 +12,12 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UiConfigParser {
+
+    private static final Logger LOG = LoggerFactory.getLogger(UiConfigParser.class);
     private static final Map<String, ButtonConfig> buttons = new HashMap<>();
     /** Порядок кнопок по контексту (как в XML). */
     private static final List<ButtonConfig> buttonsByContextOrder = new ArrayList<>();
@@ -26,7 +30,7 @@ public class UiConfigParser {
             // Updated path to match structure: lib/config/UI/Buttons.xml
             File xmlFile = ResourceLocator.file("lib/config/UI/Buttons.xml");
             if (!xmlFile.exists()) {
-                System.err.println("UI Config not found: " + xmlFile.getAbsolutePath());
+                LOG.error("UI Config not found: " + xmlFile.getAbsolutePath());
                 return;
             }
 
@@ -74,7 +78,6 @@ public class UiConfigParser {
             }
             initialized = true;
         } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 

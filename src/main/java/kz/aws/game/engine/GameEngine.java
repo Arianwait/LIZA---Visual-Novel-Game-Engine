@@ -35,6 +35,8 @@ import kz.aws.game.scenelist.SceneController;
 import kz.aws.game.scenelist.SceneInfo;
 import kz.aws.game.soundtrack.SoundEffect;
 import kz.aws.game.utils.OverlayMarker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Игровой движок визуальной новеллы: машина состояний повествования
@@ -45,6 +47,8 @@ import kz.aws.game.utils.OverlayMarker;
  * на экран уходят display-копии кадров с runtime-визуалом.
  */
 public class GameEngine {
+
+    private static final Logger LOG = LoggerFactory.getLogger(GameEngine.class);
     private Map<Integer, List<SceneFrame>> allScenes;
     private List<HistoryStep> history;
     private int historyIndex = -1;
@@ -118,9 +122,9 @@ public class GameEngine {
     private void reportScenarioProblems() {
         List<String> problems = ScenarioValidator.validate(allScenes);
         if (problems.isEmpty()) return;
-        System.err.println("Проверка сценария: найдено проблем — " + problems.size());
+        LOG.error("Проверка сценария: найдено проблем — " + problems.size());
         for (String problem : problems) {
-            System.err.println("  " + problem);
+            LOG.error("  " + problem);
         }
     }
 
@@ -238,13 +242,13 @@ public class GameEngine {
     private boolean clampPositionToScene() {
         List<SceneFrame> frames = allScenes.get(currentSceneId);
         if (frames == null || frames.isEmpty()) {
-            System.err.println("Сцена " + currentSceneId
+            LOG.error("Сцена " + currentSceneId
                     + " отсутствует в сценарии — состояние не восстановлено");
             isFinished = true;
             return false;
         }
         if (currentFrameIndex >= frames.size()) {
-            System.err.println("Кадр " + currentFrameIndex + " сцены " + currentSceneId
+            LOG.error("Кадр " + currentFrameIndex + " сцены " + currentSceneId
                     + " отсутствует (кадров " + frames.size()
                     + ") — позиция сдвинута на последний кадр");
             currentFrameIndex = frames.size() - 1;
@@ -337,7 +341,7 @@ public class GameEngine {
 
         List<SceneFrame> frames = allScenes.get(sceneId);
         if (frames == null || frames.isEmpty()) {
-            System.err.println("jumpTo: scene " + sceneId + " not found or empty");
+            LOG.error("jumpTo: scene " + sceneId + " not found or empty");
             isFinished = true;
             return;
         }
@@ -955,7 +959,7 @@ public class GameEngine {
         try {
             amount = Integer.parseInt(command.getValue().trim());
         } catch (NumberFormatException e) {
-            System.err.println("Команда " + command.getKind() + ": некорректное значение \""
+            LOG.error("Команда " + command.getKind() + ": некорректное значение \""
                     + command.getValue() + "\" для " + target);
             return;
         }

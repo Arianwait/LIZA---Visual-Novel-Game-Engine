@@ -3,12 +3,16 @@ package kz.aws.game.utils;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javafx.scene.image.Image;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Кеш ресурсов МЕНЮ для предотвращения повторной загрузки.
  * Ресурсы меню загружаются один раз при старте (во время логотипа) и остаются в памяти.
  */
 public class MenuResourceCache {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MenuResourceCache.class);
     private static final Map<String, Image> imageCache = new ConcurrentHashMap<>();
     private static volatile boolean menuResourcesPreloaded = false;
     private static volatile boolean isLoading = false;
@@ -34,7 +38,7 @@ public class MenuResourceCache {
                 ? (themeBackgroundPathOptional.startsWith("file:") ? themeBackgroundPathOptional : "file:" + themeBackgroundPathOptional)
                 : null;
         isLoading = true;
-        System.out.println("Starting background preload of menu resources...");
+        LOG.info("Starting background preload of menu resources...");
 
         Thread preloaderThread = new Thread(() -> {
             try {
@@ -45,10 +49,9 @@ public class MenuResourceCache {
                 loadImage(config.tableImagePath);
                 loadImage(ResourceLocator.url("lib/Logo/logo.png"));
 
-                System.out.println("Menu resources preloaded successfully (Background Thread)");
+                LOG.info("Menu resources preloaded successfully (Background Thread)");
             } catch (Exception e) {
-                System.err.println("Error in menu resources preloader: " + e.getMessage());
-                e.printStackTrace();
+                LOG.error("Error in menu resources preloader: " + e.getMessage());
             } finally {
                 menuResourcesPreloaded = true;
                 isLoading = false;
@@ -87,14 +90,13 @@ public class MenuResourceCache {
             }
             
             if (image.isError()) {
-                System.err.println("Error loading image: " + path + " - " + image.getException());
+                LOG.error("Error loading image: " + path + " - " + image.getException());
             } else {
                 imageCache.put(path, image);
-                System.out.println("Loaded: " + path + " (" + (image.getProgress() * 100) + "%)");
+                LOG.info("Loaded: " + path + " (" + (image.getProgress() * 100) + "%)");
             }
         } catch (Exception e) {
-            System.err.println("Failed to load image: " + path);
-            e.printStackTrace();
+            LOG.error("Failed to load image: " + path);
         }
     }
     
@@ -110,13 +112,13 @@ public class MenuResourceCache {
         }
         
         // Если нет в кеше, загружаем асинхронно (fallback)
-        System.out.println("Warning: Image not in cache, loading async: " + path);
+        LOG.info("Warning: Image not in cache, loading async: " + path);
         try {
             Image image = new Image(path, 0, 0, true, true, true);
             imageCache.put(path, image);
             return image;
         } catch (Exception e) {
-            System.err.println("Failed to load image: " + path);
+            LOG.error("Failed to load image: " + path);
             return null;
         }
     }

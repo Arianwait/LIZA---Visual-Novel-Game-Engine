@@ -17,6 +17,8 @@ import kz.aws.game.engine.parser.SceneXmlParser;
 import kz.aws.game.mainscene.LogoAnimation;
 import kz.aws.game.utils.VirtualViewport;
 import kz.aws.game.utils.ResourceLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Точка входа приложения. Создаёт Stage и Scene, разворачивает
@@ -24,6 +26,8 @@ import kz.aws.game.utils.ResourceLocator;
  * дизайн-разрешения и масштабируется под реальный размер окна одним трансформом.
  */
 public class GameDispatcher extends Application implements Serializable {
+
+    private static final Logger LOG = LoggerFactory.getLogger(GameDispatcher.class);
 
 	private static final long serialVersionUID = 8222725889624267118L;
 
@@ -37,6 +41,10 @@ public class GameDispatcher extends Application implements Serializable {
 	 * @param args аргументы командной строки
 	 */
 	public static void main(String[] args) {
+		// логи кладём рядом с игрой, а не в случайную рабочую директорию
+		System.setProperty("liza.logs",
+				ResourceLocator.resolve("logs").toString());
+
 		if (args.length > 0 && VALIDATE_FLAG.equals(args[0])) {
 			System.exit(validateScenario());
 			return;
@@ -54,14 +62,14 @@ public class GameDispatcher extends Application implements Serializable {
 		List<String> problems = new java.util.ArrayList<>(ScenarioValidator.validate(scenes));
 		problems.addAll(ScenarioValidator.validateCommands(SceneXmlParser.getScenarioPath()));
 
-		System.out.println("Проверка сценария: сцен загружено — " + scenes.size());
+		LOG.info("Проверка сценария: сцен загружено — " + scenes.size());
 		if (problems.isEmpty()) {
-			System.out.println("Проблем не найдено.");
+			LOG.info("Проблем не найдено.");
 			return 0;
 		}
-		System.out.println("Найдено проблем: " + problems.size());
+		LOG.info("Найдено проблем: " + problems.size());
 		for (String problem : problems) {
-			System.out.println("  " + problem);
+			LOG.info("  " + problem);
 		}
 		return 1;
 	}

@@ -47,7 +47,6 @@ public class TitlesAnimation{
 
             transition.play();
         } catch (IOException e) {
-            e.printStackTrace();
         }
         
         appSettings.getStage().show();

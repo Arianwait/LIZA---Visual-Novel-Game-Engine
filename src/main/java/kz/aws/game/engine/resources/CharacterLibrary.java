@@ -10,8 +10,12 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import kz.aws.game.utils.ResourceLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CharacterLibrary {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CharacterLibrary.class);
     // Map<CharacterName, Map<PoseName, FilePath>>
     private static final Map<String, Map<String, String>> characterPoses = new HashMap<>();
     /** Map<CharacterName, ColorString> — цвет имени из Person.xml (атрибут Color). */
@@ -24,7 +28,7 @@ public class CharacterLibrary {
         try {
             File xmlFile = ResourceLocator.file("lib/Scene/Person.xml");
             if (!xmlFile.exists()) {
-                System.err.println("Person.xml not found at " + xmlFile.getAbsolutePath());
+                LOG.error("Person.xml not found at " + xmlFile.getAbsolutePath());
                 return;
             }
 
@@ -59,9 +63,8 @@ public class CharacterLibrary {
                 }
             }
             initialized = true;
-            System.out.println("CharacterLibrary initialized with " + characterPoses.size() + " characters.");
+            LOG.info("CharacterLibrary initialized with " + characterPoses.size() + " characters.");
         } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 

@@ -13,6 +13,8 @@ import kz.aws.game.utils.AssetPreloader;
 import kz.aws.game.utils.MenuResourceCache;
 import kz.aws.game.utils.VirtualViewport;
 import kz.aws.game.utils.ResourceLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Экран загрузки: логотип, прогресс-бар и статус. Показывается поверх
@@ -20,6 +22,8 @@ import kz.aws.game.utils.ResourceLocator;
  * Все размеры — в пикселях дизайн-разрешения {@link VirtualViewport}.
  */
 public class LoadingScreen {
+
+    private static final Logger LOG = LoggerFactory.getLogger(LoadingScreen.class);
 
     private final StackPane root;
     private final ProgressBar progressBar;
@@ -90,8 +94,7 @@ public class LoadingScreen {
         });
         
         task.setOnFailed(e -> {
-            System.err.println("Loading failed: " + task.getException().getMessage());
-            task.getException().printStackTrace();
+            LOG.error("Loading failed", task.getException());
             // Proceed anyway or show error? For now proceed.
             if (onFinished != null) onFinished.run();
         });

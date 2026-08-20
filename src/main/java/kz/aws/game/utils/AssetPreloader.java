@@ -13,12 +13,16 @@ import kz.aws.game.engine.model.VisualState;
 import kz.aws.game.engine.parser.SceneXmlParser;
 import kz.aws.game.engine.render.SceneRenderer;
 import kz.aws.game.engine.resources.CharacterLibrary;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Task to preload assets for game scenes.
  * Scans parsed scenes for image paths and loads them into SceneRenderer's cache.
  */
 public class AssetPreloader extends Task<Void> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(AssetPreloader.class);
 
     private Map<Integer, List<SceneFrame>> allScenes; // Not final anymore
     //private final int startSceneId;
@@ -89,7 +93,7 @@ public class AssetPreloader extends Task<Void> {
                 SceneRenderer.addToCache(path, img); // Need to expose this method
                 
             } catch (Exception e) {
-                System.err.println("Failed to preload: " + path);
+                LOG.error("Failed to preload: " + path);
             }
             
             loadedAssets++;

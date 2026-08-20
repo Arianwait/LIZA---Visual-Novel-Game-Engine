@@ -43,7 +43,6 @@ public class ShowMainMenu {
             appSettings.getMediaPlayer().play();
             SceneInfo.setMusic(musicPath);
         } catch (Exception e) {
-            e.printStackTrace();
         }
 
         VBox contentPane = new VBox();

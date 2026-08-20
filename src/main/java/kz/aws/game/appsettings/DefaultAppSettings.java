@@ -18,9 +18,13 @@ import kz.aws.game.animation.ButtonAnimation;
 import kz.aws.game.dispatcher.GameDispatcher;
 import kz.aws.game.utils.VirtualViewport;
 import kz.aws.game.utils.ResourceLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("deprecation")
 public class DefaultAppSettings implements AppSettings {
+
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultAppSettings.class);
 	
     private static String filePath = "lib/config/SettingsConfig.json";
     /** Идентификатор темы: hitech, classic, walk. По умолчанию — хайтек. */
@@ -94,7 +98,7 @@ public class DefaultAppSettings implements AppSettings {
             JSONObject jsonObject = (JSONObject) obj;
             this.updateSettings(jsonObject);
         } catch (IOException | ParseException | RuntimeException e) {
-            System.err.println("Настройки не перечитаны (" + filePath + "): " + e.getMessage());
+            LOG.error("Настройки не перечитаны (" + filePath + "): " + e.getMessage());
         }
     }
     

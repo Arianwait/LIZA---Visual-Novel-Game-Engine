@@ -14,12 +14,16 @@ import javafx.scene.layout.Background;
 import javafx.scene.layout.StackPane;
 import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.background.BackgroundDispatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Парсер конфигурации тем интерфейса из JSON.
  * Список тем задаётся в lib/config/ThemesConfig.json; стили по id — в style.css (.theme-{id}).
  */
 public class ThemesConfigParser {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ThemesConfigParser.class);
 
     private static final String CONFIG_PATH = "lib/config/ThemesConfig.json";
 
@@ -94,7 +98,7 @@ public class ThemesConfigParser {
             initialized = true;
             return new ArrayList<>(cachedThemes);
         } catch (IOException | ParseException | ClassCastException e) {
-            System.err.println("ThemesConfig: could not read " + CONFIG_PATH + ", using defaults: " + e.getMessage());
+            LOG.error("ThemesConfig: could not read " + CONFIG_PATH + ", using defaults: " + e.getMessage());
             cachedThemes = getDefaultThemes();
             initialized = true;
             return new ArrayList<>(cachedThemes);
@@ -166,7 +170,7 @@ public class ThemesConfigParser {
             Background bg = bgDispatch.getBackground(path);
             if (bg != null) root.setBackground(bg);
         } catch (Exception e) {
-            System.err.println("ThemesConfig: could not set menu background from " + path + ": " + e.getMessage());
+            LOG.error("ThemesConfig: could not set menu background from " + path + ": " + e.getMessage());
         }
     }
 

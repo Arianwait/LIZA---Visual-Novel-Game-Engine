@@ -5,6 +5,8 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Единая точка разрешения путей к ресурсам игры (папка {@code lib/}).
@@ -15,6 +17,8 @@ import java.nio.file.Paths;
  * рядом с исполняемым jar и падает обратно на рабочую директорию.
  */
 public final class ResourceLocator {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ResourceLocator.class);
 
     /** Папка с ресурсами игры внутри корня. */
     private static final String LIB_DIRECTORY = "lib";
@@ -127,7 +131,7 @@ public final class ResourceLocator {
      */
     public static boolean exists(String relativePath) {
         if (Files.exists(resolve(relativePath))) return true;
-        System.err.println("Ресурс не найден: " + relativePath
+        LOG.error("Ресурс не найден: " + relativePath
                 + " (искали в " + getGameRoot() + "). Запускайте игру из папки,"
                 + " содержащей lib/, либо задайте -D" + ROOT_PROPERTY + "=путь");
         return false;

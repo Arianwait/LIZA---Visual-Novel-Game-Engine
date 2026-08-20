@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Реестр игровых панелей. Аналог {@code ButtonActionRegistry}.
@@ -19,6 +21,8 @@ import org.reflections.Reflections;
  * пометить {@link GamePanel @GamePanel} — регистрация автоматическая.
  */
 public final class PuzzleRegistry {
+
+    private static final Logger LOG = LoggerFactory.getLogger(PuzzleRegistry.class);
 
     private static final String PANEL_PACKAGE = "kz.aws.game.panel";
     private static final Map<String, Class<? extends BaseGamePanel>> PANELS = new HashMap<>();
@@ -36,13 +40,13 @@ public final class PuzzleRegistry {
         ensureDiscovered();
         Class<? extends BaseGamePanel> cls = PANELS.get(panelId);
         if (cls == null) {
-            System.err.println("PuzzleRegistry: панель не найдена: " + panelId);
+            LOG.error("PuzzleRegistry: панель не найдена: " + panelId);
             return null;
         }
         try {
             return cls.getConstructor().newInstance();
         } catch (Exception e) {
-            System.err.println("PuzzleRegistry: ошибка создания " + cls.getSimpleName() + ": " + e.getMessage());
+            LOG.error("PuzzleRegistry: ошибка создания " + cls.getSimpleName() + ": " + e.getMessage());
             return null;
         }
     }

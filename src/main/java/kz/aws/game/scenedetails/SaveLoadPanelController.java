@@ -30,6 +30,8 @@ import kz.aws.game.scenelist.SceneBuilder;
 import kz.aws.game.scenelist.SceneInfo;
 import kz.aws.game.utils.VirtualViewport;
 import kz.aws.game.utils.ResourceLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Единый FXML-контроллер для панелей сохранения и загрузки:
@@ -37,6 +39,8 @@ import kz.aws.game.utils.ResourceLocator;
  * Все размеры — в пикселях дизайн-разрешения {@link VirtualViewport}.
  */
 public class SaveLoadPanelController extends VBox {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SaveLoadPanelController.class);
 
     private static final String FXML_PATH = "lib/fxml/save-load-panel.fxml";
     private static final String SAVE_DIRECTORY = "save";
@@ -191,7 +195,7 @@ public class SaveLoadPanelController extends VBox {
         // посторонний файл в save/ (например backup.ser) не должен ронять всю панель
         int sceneId = parseSceneIdFromFileName(fileName);
         if (sceneId < 0) {
-            System.err.println("Пропущен файл с непонятным именем в " + SAVE_DIRECTORY
+            LOG.error("Пропущен файл с непонятным именем в " + SAVE_DIRECTORY
                     + ": " + fileName);
             return;
         }
@@ -302,7 +306,7 @@ public class SaveLoadPanelController extends VBox {
                     }
                     performSave(slotIndex, button);
                 },
-                () -> System.out.println("Отмена смены сохранения"),
+                () -> LOG.info("Отмена смены сохранения"),
                 buttonsBox);
     }
 
@@ -315,7 +319,7 @@ public class SaveLoadPanelController extends VBox {
     private void performSave(int slotIndex, Button button) {
         GameEngine engine = SceneInfo.getGameEngine();
         if (engine == null) {
-            System.err.println("Cannot save: GameEngine is null.");
+            LOG.error("Cannot save: GameEngine is null.");
             return;
         }
         GameData gameData = engine.getSaveData();
@@ -367,7 +371,7 @@ public class SaveLoadPanelController extends VBox {
                 "Вы уверены, загрузить сохранения, все не сохраненые данные будут удалены?",
                 null,
                 () -> executeLoad(fileName, sceneId),
-                () -> System.out.println("Отмена смены сохранения"),
+                () -> LOG.info("Отмена смены сохранения"),
                 buttonsBox);
     }
 
@@ -400,7 +404,7 @@ public class SaveLoadPanelController extends VBox {
         try {
             Files.delete(path);
         } catch (IOException e) {
-            System.err.println("Ошибка при удалении файла: " + filePath);
+            LOG.error("Ошибка при удалении файла: " + filePath);
         }
     }
 }

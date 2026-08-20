@@ -31,6 +31,8 @@ import kz.aws.game.engine.model.VisualState;
 import kz.aws.game.engine.model.ZoomEffectCommand;
 import kz.aws.game.engine.resources.CharacterLibrary;
 import kz.aws.game.utils.ResourceLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Парсер сценария из XML: превращает элементы {@code <dialog>} в кадры сцен.
@@ -38,6 +40,8 @@ import kz.aws.game.utils.ResourceLocator;
  * с сообщением, а не обрушивает весь сценарий.
  */
 public class SceneXmlParser {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SceneXmlParser.class);
 
     /** Основной файл сценария. */
     private static final String SCENARIO_PATH = "lib/Scene/Dialog_Structured.xml";
@@ -98,12 +102,12 @@ public class SceneXmlParser {
         try {
             id = Integer.parseInt(idStr.trim());
         } catch (NumberFormatException e) {
-            System.err.println("Сценарий: сцена с некорректным id=\"" + idStr
+            LOG.error("Сценарий: сцена с некорректным id=\"" + idStr
                     + "\" пропущена (ожидается целое число)");
             return;
         }
         if (allScenes.containsKey(id)) {
-            System.err.println("Сценарий: сцена id=" + id
+            LOG.error("Сценарий: сцена id=" + id
                     + " встречается повторно — использована первая");
             return;
         }
@@ -119,7 +123,7 @@ public class SceneXmlParser {
     private static Document loadScenarioDocument(String scenarioPath) {
         File xmlFile = ResourceLocator.file(scenarioPath);
         if (!xmlFile.exists()) {
-            System.err.println("Файл сценария не найден: " + scenarioPath);
+            LOG.error("Файл сценария не найден: " + scenarioPath);
             return null;
         }
         try {
@@ -128,7 +132,7 @@ public class SceneXmlParser {
             doc.getDocumentElement().normalize();
             return doc;
         } catch (Exception e) {
-            System.err.println("Сценарий не разобран (" + xmlFile + "): " + e.getMessage());
+            LOG.error("Сценарий не разобран (" + xmlFile + "): " + e.getMessage());
             return null;
         }
     }

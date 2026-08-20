@@ -1,8 +1,12 @@
 package kz.aws.game.scenelist;
 
 import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DialogList {
+
+    private static final Logger LOG = LoggerFactory.getLogger(DialogList.class);
 
     private static List<DialogEntry> dialogList = new ArrayList<>(); // Список диалогов
     private static final int MAX_SIZE = 7; // Максимальное количество элементов
@@ -57,8 +61,8 @@ public class DialogList {
     // Печать всех диалогов
     public static void printDialogs() {
         for (DialogEntry entry : dialogList) {
-            System.out.println("Имя: " + entry.getCharacterName() + " (Цвет: " + entry.getCharacterColor() + ")");
-            System.out.println("  Диалог: " + entry.getDialogText() + " (Цвет: " + entry.getDialogColor() + ")");
+            LOG.info("Имя: " + entry.getCharacterName() + " (Цвет: " + entry.getCharacterColor() + ")");
+            LOG.info("  Диалог: " + entry.getDialogText() + " (Цвет: " + entry.getDialogColor() + ")");
         }
     }
 

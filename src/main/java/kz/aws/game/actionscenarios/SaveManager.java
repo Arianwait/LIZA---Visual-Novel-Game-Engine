@@ -8,11 +8,15 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import kz.aws.game.scenelist.GameData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Сохранение и загрузка игры через Java-сериализацию в папку {@value #SAVE_DIRECTORY}.
  */
 public class SaveManager {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SaveManager.class);
 
     /** Папка с файлами сохранений (относительно рабочей директории). */
     public static final String SAVE_DIRECTORY = "save";
@@ -34,7 +38,7 @@ public class SaveManager {
             oos.writeObject(gameInfo);
             return true;
         } catch (IOException e) {
-            System.err.println("Сохранение не удалось (" + file + "): " + e.getMessage());
+            LOG.error("Сохранение не удалось (" + file + "): " + e.getMessage());
             return false;
         }
     }
@@ -50,7 +54,7 @@ public class SaveManager {
         if (parent == null || parent.isDirectory()) return true;
         if (parent.mkdirs()) return true;
 
-        System.err.println("Не удалось создать папку сохранений: " + parent);
+        LOG.error("Не удалось создать папку сохранений: " + parent);
         return false;
     }
 
@@ -65,14 +69,14 @@ public class SaveManager {
 
         File file = new File(SAVE_DIRECTORY, fileName);
         if (!file.isFile()) {
-            System.err.println("Файл сохранения не найден: " + file);
+            LOG.error("Файл сохранения не найден: " + file);
             return null;
         }
 
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
             return (GameData) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            System.err.println("Файл сохранения повреждён или несовместим (" + file
+            LOG.error("Файл сохранения повреждён или несовместим (" + file
                     + "): " + e.getMessage());
             return null;
         }
