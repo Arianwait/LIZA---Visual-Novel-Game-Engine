@@ -153,6 +153,9 @@ public class SaveLoadPanelController extends VBox {
             return mode == Mode.SAVE ? "Сохранение" + (slotIndex + 1) : "Пусто";
         }
         String fileName = FileUtils.findFileByNumber(SAVE_DIRECTORY, slotIndex);
+        if (fileName == null) {
+            return mode == Mode.SAVE ? "Сохранение" + (slotIndex + 1) : "Пусто";
+        }
         String[] blocks = fileName.split("_");
         return blocks[blocks.length - 1].replace(".ser", "");
     }
@@ -182,9 +185,32 @@ public class SaveLoadPanelController extends VBox {
     private void configureLoadSlot(Button button, int slotIndex, boolean slotOccupied) {
         if (!slotOccupied) return;
         String fileName = FileUtils.findFileByNumber(SAVE_DIRECTORY, slotIndex);
-        String[] blocks = fileName.split("_");
-        int sceneId = Integer.parseInt(blocks[1]);
+        if (fileName == null) return;
+
+        // посторонний файл в save/ (например backup.ser) не должен ронять всю панель
+        int sceneId = parseSceneIdFromFileName(fileName);
+        if (sceneId < 0) {
+            System.err.println("Пропущен файл с непонятным именем в " + SAVE_DIRECTORY
+                    + ": " + fileName);
+            return;
+        }
         button.setOnAction(e -> performLoad(fileName, sceneId));
+    }
+
+    /**
+     * Извлекает id сцены из имени файла формата {@code слот_сцена_дата.ser}.
+     *
+     * @param fileName имя файла сохранения
+     * @return id сцены или -1, если имя не соответствует формату
+     */
+    private int parseSceneIdFromFileName(String fileName) {
+        String[] blocks = fileName.split("_");
+        if (blocks.length < 2) return -1;
+        try {
+            return Integer.parseInt(blocks[1]);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
     }
 
     /**
@@ -269,7 +295,10 @@ public class SaveLoadPanelController extends VBox {
                 "Вы уверены, что хотите поменять сохранения?",
                 null,
                 () -> {
-                    deleteFile("save/" + FileUtils.findFileByNumber(SAVE_DIRECTORY, slotIndex));
+                    String existing = FileUtils.findFileByNumber(SAVE_DIRECTORY, slotIndex);
+                    if (existing != null) {
+                        deleteFile(SAVE_DIRECTORY + "/" + existing);
+                    }
                     performSave(slotIndex, button);
                 },
                 () -> System.out.println("Отмена смены сохранения"),
@@ -292,7 +321,7 @@ public class SaveLoadPanelController extends VBox {
         String dateTime = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
         String saveFileName = slotIndex + "_" + gameData.getCurrentSceneId() + "_" + dateTime + ".ser";
 
-        if (!SaveManadger.serializeClicker(gameData, SAVE_DIRECTORY + "/" + saveFileName)) {
+        if (!SaveManadger.serializeClicker(gameData, saveFileName)) {
             showSaveFailed();
             return;
         }

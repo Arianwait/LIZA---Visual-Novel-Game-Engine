@@ -10,7 +10,9 @@ import javafx.scene.layout.StackPane;
 import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.engine.model.HistoryStep;
 import kz.aws.game.engine.model.PuzzleCommand;
+import kz.aws.game.engine.model.AnimationCommand;
 import kz.aws.game.engine.model.SceneFrame;
+import kz.aws.game.engine.model.StateCommand;
 import kz.aws.game.engine.model.StopEffectCommand;
 import kz.aws.game.engine.model.VisualEffectCommand;
 import kz.aws.game.engine.model.VisualState;
@@ -743,6 +745,7 @@ public class GameEngine {
      * потом рендерим кадр (afterAll), потом показываем панель поверх (если есть).
      */
     private void showFrameExtras(SceneFrame frame, Runnable afterAll) {
+        executeStateCommands(frame);
         showInputDialogIfNeeded(frame, () -> {
             // Сначала рендерим кадр — фон и текст уже на месте
             if (afterAll != null) afterAll.run();
@@ -837,6 +840,63 @@ public class GameEngine {
             }
         }
         return true;
+    }
+
+    /**
+     * Применяет команды изменения состояния кадра: флаги и репутацию.
+     * До этого команды SetFlag/ReduceReputathion из сценария молча
+     * игнорировались — их выполнял только удалённый legacy-путь.
+     *
+     * @param frame текущий кадр
+     */
+    private void executeStateCommands(SceneFrame frame) {
+        if (frame.getEntryAnimations() == null) return;
+        for (AnimationCommand command : frame.getEntryAnimations()) {
+            if (command instanceof StateCommand state) {
+                applyStateCommand(state);
+            }
+        }
+    }
+
+    /**
+     * Выполняет одну команду изменения состояния.
+     *
+     * @param command команда из сценария
+     */
+    private void applyStateCommand(StateCommand command) {
+        String target = command.getTarget();
+        if (target.isEmpty()) return;
+
+        if (command.getKind() == StateCommand.Kind.SET_FLAG) {
+            SceneController.setFlag(target, Boolean.parseBoolean(command.getValue()));
+            return;
+        }
+        applyReputationCommand(command, target);
+    }
+
+    /**
+     * Применяет изменение репутации персонажа.
+     *
+     * @param command команда из сценария
+     * @param target  имя персонажа
+     */
+    private void applyReputationCommand(StateCommand command, String target) {
+        int amount;
+        try {
+            amount = Integer.parseInt(command.getValue().trim());
+        } catch (NumberFormatException e) {
+            System.err.println("Команда " + command.getKind() + ": некорректное значение \""
+                    + command.getValue() + "\" для " + target);
+            return;
+        }
+        int current = SceneController.getCharacterReputation(target);
+        int updated = switch (command.getKind()) {
+            case SET_REPUTATION -> amount;
+            case ADD_REPUTATION -> current + amount;
+            case REDUCE_REPUTATION -> current - amount;
+            default -> current;
+        };
+        SceneController.setCharacterReputation(target, updated);
     }
 
     /**

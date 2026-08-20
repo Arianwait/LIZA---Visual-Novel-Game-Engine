@@ -18,20 +18,23 @@ public class SaveManadger {
     public static final String SAVE_DIRECTORY = "save";
 
     /**
-     * Сохраняет состояние игры в файл. Папка сохранений создаётся при необходимости.
+     * Сохраняет состояние игры в файл внутри папки {@value #SAVE_DIRECTORY}.
+     * Папка создаётся при необходимости.
      *
      * @param gameInfo состояние игры
-     * @param filePath путь к файлу сохранения
+     * @param fileName имя файла сохранения (без пути)
      * @return true — сохранение удалось; false — файл не записан
      */
-    public static boolean serializeClicker(GameData gameInfo, String filePath) {
-        if (!ensureSaveDirectory(filePath)) return false;
+    public static boolean serializeClicker(GameData gameInfo, String fileName) {
+        if (fileName == null) return false;
+        File file = new File(SAVE_DIRECTORY, fileName);
+        if (!ensureSaveDirectory(file)) return false;
 
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath))) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
             oos.writeObject(gameInfo);
             return true;
         } catch (IOException e) {
-            System.err.println("Сохранение не удалось (" + filePath + "): " + e.getMessage());
+            System.err.println("Сохранение не удалось (" + file + "): " + e.getMessage());
             return false;
         }
     }
@@ -39,11 +42,11 @@ public class SaveManadger {
     /**
      * Создаёт родительскую папку файла сохранения, если её нет.
      *
-     * @param filePath путь к файлу сохранения
+     * @param file файл сохранения
      * @return true — папка существует или создана
      */
-    private static boolean ensureSaveDirectory(String filePath) {
-        File parent = new File(filePath).getAbsoluteFile().getParentFile();
+    private static boolean ensureSaveDirectory(File file) {
+        File parent = file.getAbsoluteFile().getParentFile();
         if (parent == null || parent.isDirectory()) return true;
         if (parent.mkdirs()) return true;
 
@@ -52,15 +55,15 @@ public class SaveManadger {
     }
 
     /**
-     * Загружает состояние игры из файла в папке сохранений.
+     * Загружает состояние игры из файла в папке {@value #SAVE_DIRECTORY}.
      *
-     * @param filePath имя файла сохранения внутри папки {@value #SAVE_DIRECTORY}
+     * @param fileName имя файла сохранения (без пути)
      * @return состояние игры или null, если файл отсутствует либо повреждён
      */
-    public static GameData deserializeClicker(String filePath) {
-        if (filePath == null) return null;
+    public static GameData deserializeClicker(String fileName) {
+        if (fileName == null) return null;
 
-        File file = new File(SAVE_DIRECTORY, filePath);
+        File file = new File(SAVE_DIRECTORY, fileName);
         if (!file.isFile()) {
             System.err.println("Файл сохранения не найден: " + file);
             return null;

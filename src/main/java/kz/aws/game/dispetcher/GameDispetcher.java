@@ -50,7 +50,8 @@ public class GameDispetcher extends Application implements Serializable {
 	 */
 	private static int validateScenario() {
 		Map<Integer, List<SceneFrame>> scenes = SceneXmlParser.parseAllScenes();
-		List<String> problems = ScenarioValidator.validate(scenes);
+		List<String> problems = new java.util.ArrayList<>(ScenarioValidator.validate(scenes));
+		problems.addAll(ScenarioValidator.validateCommands(SceneXmlParser.getScenarioPath()));
 
 		System.out.println("Проверка сценария: сцен загружено — " + scenes.size());
 		if (problems.isEmpty()) {

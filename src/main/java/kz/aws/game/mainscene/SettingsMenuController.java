@@ -105,8 +105,13 @@ public class SettingsMenuController extends VBox {
      */
     private void setupVolumeSlider() {
         volumeSlider.setValue(appSettings.getVolumeValue());
-        volumeSlider.valueProperty().addListener(
-                (obs, oldVal, newVal) -> appSettings.getMediaPlayer().setVolume(newVal.doubleValue()));
+        volumeSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
+            // плеера может не быть: музыка меню не загрузилась или уже остановлена
+            if (appSettings.getMediaPlayer() != null) {
+                appSettings.getMediaPlayer().setVolume(newVal.doubleValue());
+            }
+            appSettings.setVolumeValue(newVal.doubleValue());
+        });
     }
 
     /**

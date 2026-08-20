@@ -2,8 +2,11 @@ package kz.aws.game.appsettings;
 
 import org.json.simple.JSONObject;
 
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 @SuppressWarnings("deprecation")
 public class JsonConfigWriter {
@@ -17,11 +20,10 @@ public class JsonConfigWriter {
         jsonObject.put("volumeValue", appSettings.getVolumeValue());
         jsonObject.put("uiTheme", appSettings.getUiTheme());
 
-        try (FileWriter fileWriter = new FileWriter(filePath)) {
-            fileWriter.write(jsonObject.toJSONString());
+        try (Writer writer = Files.newBufferedWriter(Path.of(filePath), StandardCharsets.UTF_8)) {
+            writer.write(jsonObject.toJSONString());
         } catch (IOException e) {
-            e.printStackTrace();
-            // Обработка ошибок при записи в JSON
+            System.err.println("Настройки не сохранены (" + filePath + "): " + e.getMessage());
         }
     }
 }

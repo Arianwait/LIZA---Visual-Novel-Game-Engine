@@ -66,15 +66,15 @@ public class DimOverlay {
 
         // Ставим overlayPane выше (на случай, если там уже есть другие элементы)
         overlayPane.toFront();
-        
-        // Готовим анимацию появления
+
+        // Останавливаем текущую анимацию: иначе от прошлого hide остался бы
+        // обработчик, удаляющий overlay сразу после появления
+        fadeTransition.stop();
+        fadeTransition.setOnFinished(null);
+
         overlayPane.setOpacity(0); // начальное значение
         fadeTransition.setFromValue(0);
         fadeTransition.setToValue(1.0); // полная видимость
-        fadeTransition.setOnFinished(e -> {
-            // По окончании можно что-то дополнительно сделать
-        });
-
         fadeTransition.play();
     }
 
@@ -86,6 +86,9 @@ public class DimOverlay {
         if (!parentContainer.getChildren().contains(overlayPane)) {
             return;
         }
+
+        // Останавливаем текущую анимацию появления перед перенастройкой
+        fadeTransition.stop();
 
         // Настраиваем анимацию исчезновения
         fadeTransition.setFromValue(overlayPane.getOpacity());

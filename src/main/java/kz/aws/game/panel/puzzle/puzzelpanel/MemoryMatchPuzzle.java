@@ -202,10 +202,18 @@ public class MemoryMatchPuzzle extends BaseGamePanel {
 
         if (matchedPairs == TOTAL_CARDS / 2) {
             endGame(true, "Все пары найдены!");
-        } else {
-            statusLabel.setText("Пара найдена! Продолжайте");
-            inputLocked = false;
+            return;
         }
+        // попытка расходуется и на удачное открытие: без этой проверки
+        // счётчик уходил в минус и игра продолжалась после «0 попыток»
+        if (attemptsLeft <= 0) {
+            PauseTransition pause = new PauseTransition(Duration.millis(600));
+            pause.setOnFinished(e -> endGame(false, "Попытки закончились!"));
+            pause.play();
+            return;
+        }
+        statusLabel.setText("Пара найдена! Продолжайте");
+        inputLocked = false;
     }
 
     /**

@@ -1,6 +1,5 @@
 package kz.aws.game.appsettings;
 
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.function.Consumer;
 
@@ -25,8 +24,11 @@ public class DefaultAppSettings implements AppSettings {
     private static String filePath = "lib/config/SettingsConfig.json";
     /** Идентификатор темы: hitech, classic, walk. По умолчанию — хайтек. */
     public static final String DEFAULT_UI_THEME = "hitech";
-    private int windowWidth;
-    private int windowHeight;
+    /** Размер окна по умолчанию, если конфиг отсутствует или повреждён. */
+    private static final int DEFAULT_WINDOW_WIDTH = 1280;
+    private static final int DEFAULT_WINDOW_HEIGHT = 720;
+    private int windowWidth = DEFAULT_WINDOW_WIDTH;
+    private int windowHeight = DEFAULT_WINDOW_HEIGHT;
     private Double volumValue = 0.1;
     private boolean fullscreen;
     private String uiTheme = DEFAULT_UI_THEME;
@@ -47,7 +49,7 @@ public class DefaultAppSettings implements AppSettings {
 
     @Override
     public void setWindowWidth(int windowWidth) {
-        this.windowWidth = windowWidth;
+        this.windowWidth = windowWidth > 0 ? windowWidth : DEFAULT_WINDOW_WIDTH;
     }
 
     @Override
@@ -67,7 +69,7 @@ public class DefaultAppSettings implements AppSettings {
 
     @Override
     public void setWindowHeight(int windowHeight) {
-        this.windowHeight = windowHeight;
+        this.windowHeight = windowHeight > 0 ? windowHeight : DEFAULT_WINDOW_HEIGHT;
     }
 
     @Override
@@ -85,13 +87,13 @@ public class DefaultAppSettings implements AppSettings {
     public void updateSettings() {
         JSONParser parser = new JSONParser();
         
-        try (FileReader reader = new FileReader(filePath)) {
+        try (java.io.Reader reader = java.nio.file.Files.newBufferedReader(
+                java.nio.file.Path.of(filePath), java.nio.charset.StandardCharsets.UTF_8)) {
             Object obj = parser.parse(reader);
             JSONObject jsonObject = (JSONObject) obj;
             this.updateSettings(jsonObject);
-        } catch (IOException | ParseException e) {
-            e.printStackTrace();
-            // Обработка ошибок при чтении JSON
+        } catch (IOException | ParseException | RuntimeException e) {
+            System.err.println("Настройки не перечитаны (" + filePath + "): " + e.getMessage());
         }
     }
     
