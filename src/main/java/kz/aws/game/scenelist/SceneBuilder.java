@@ -202,11 +202,19 @@ public class SceneBuilder extends VBox implements Serializable {
 
     /**
      * Регистрирует навигатор для перехода между сценами из загадок.
+     * Внутри игры переход делает {@code GameEngine.jumpTo} без пересоздания
+     * сцены; SceneBuilder создаётся только если движка ещё нет.
      *
      * @param appSettings настройки
      */
     private void registerSceneNavigator(AppSettings appSettings) {
-        appSettings.setSceneNavigator(targetSceneId ->
-                new SceneBuilder(appSettings, null, targetSceneId));
+        appSettings.setSceneNavigator(targetSceneId -> {
+            GameEngine engine = SceneInfo.getGameEngine();
+            if (engine != null) {
+                engine.jumpTo(targetSceneId);
+            } else {
+                new SceneBuilder(appSettings, null, targetSceneId);
+            }
+        });
     }
 }

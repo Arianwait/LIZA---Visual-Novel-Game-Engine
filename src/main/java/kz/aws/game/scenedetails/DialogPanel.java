@@ -76,4 +76,13 @@ public interface DialogPanel {
      * @param visible true — показать
      */
     void setPanelVisible(boolean visible);
+
+    /**
+     * Включает или выключает кнопки навигации (вперёд/назад).
+     * Используется на время активной мини-игры, чтобы нельзя было
+     * листать диалог.
+     *
+     * @param enabled true — навигация доступна
+     */
+    void setNavigationEnabled(boolean enabled);
 }

@@ -8,7 +8,6 @@ import javafx.geometry.Pos;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import kz.aws.game.appsettings.AppSettings;
-import kz.aws.game.engine.model.CharacterState;
 import kz.aws.game.engine.model.HistoryStep;
 import kz.aws.game.engine.model.PuzzleCommand;
 import kz.aws.game.engine.model.SceneFrame;
@@ -29,19 +28,39 @@ import kz.aws.game.scenelist.GameData;
 import kz.aws.game.scenelist.SceneController;
 import kz.aws.game.scenelist.SceneInfo;
 
+/**
+ * Игровой движок визуальной новеллы: машина состояний повествования
+ * (next/back/jumpTo/choose), история с дельта-снимками, сохранение и
+ * восстановление состояния, запуск паззлов и панели выбора.
+ *
+ * Script-слой (allScenes из XML) после парсинга не мутируется:
+ * на экран уходят display-копии кадров с runtime-визуалом.
+ */
 public class GameEngine {
     private Map<Integer, List<SceneFrame>> allScenes;
     private List<HistoryStep> history;
     private int historyIndex = -1;
-    
+
     // Current State
     private int currentSceneId;
     private int currentFrameIndex;
-    
+
     private final SceneRenderer renderer;
     private boolean isFinished = false;
     private boolean waitingForChoice = false;
-    
+
+    /** Runtime-визуал: то, что сейчас на экране; script-кадры не мутируются. */
+    private VisualState runtimeVisual;
+    /** Последний отображённый display-кадр — prev для анимации перехода. */
+    private SceneFrame lastDisplayed;
+    /** Открытая панель выбора; null — панель не показана. */
+    private DialogChoicesController activeChoicePane;
+
+    // Дельта-трекинг истории: снимки пишутся только при изменении
+    private Map<String, Object> lastSavedGameVars = null;
+    private Map<String, String> lastSavedChoices = null;
+    private VisualState lastSavedVisual = null;
+
     // Global game variables (flags)
     private Map<String, Object> gameVariables = new HashMap<>();
     /** Словарь подстановок для текста/имён: {ключ} → значение (имя игрока и др.). */
@@ -51,6 +70,19 @@ public class GameEngine {
         this.renderer = new SceneRenderer(root, tableDetail);
         this.history = new ArrayList<>();
         this.allScenes = new HashMap<>();
+    }
+
+    /**
+     * Конструктор для тестов: позволяет подменить рендерер и набор сцен
+     * без парсинга XML и создания JavaFX-иерархии.
+     *
+     * @param renderer стаб рендерера
+     * @param scenes   готовый набор сцен
+     */
+    GameEngine(SceneRenderer renderer, Map<Integer, List<SceneFrame>> scenes) {
+        this.renderer = renderer;
+        this.history = new ArrayList<>();
+        this.allScenes = scenes;
     }
     
     public void updateView(StackPane root, DialogPanel tableDetail) {
@@ -65,20 +97,39 @@ public class GameEngine {
         System.out.println("Loaded scenes: " + allScenes.keySet());
     }
 
+    /**
+     * Начинает новую игру: полностью сбрасывает runtime-состояние движка
+     * и глобальное состояние (флаги, репутацию, выборы, список реплик),
+     * затем переходит на стартовую сцену.
+     *
+     * @param startSceneId id стартовой сцены
+     */
     public void startNewGame(int startSceneId) {
-        this.history.clear();
-        this.historyIndex = -1;
-        this.gameVariables.clear();
-        this.playerVariables.clear();
-        this.lastSavedGameVars = null;
-        this.lastSavedChoices = null;
-        
-        // Ensure allScenes are loaded if not already (e.g. if skipped initialization)
-        if (this.allScenes == null || this.allScenes.isEmpty()) {
-             this.allScenes = SceneXmlParser.parseAllScenes();
-        }
+        history.clear();
+        historyIndex = -1;
+        gameVariables.clear();
+        playerVariables.clear();
+        lastSavedGameVars = null;
+        lastSavedChoices = null;
+        lastSavedVisual = null;
+        runtimeVisual = null;
+        lastDisplayed = null;
+        waitingForChoice = false;
+        isFinished = false;
 
-        loadSceneInternal(startSceneId, 0);
+        SceneController.resetGameData();
+        SceneInfo.clearChoices();
+        SceneInfo.clearDialogs();
+
+        ensureScenesLoaded();
+        jumpTo(startSceneId);
+    }
+
+    /** Загружает сцены, если инициализация была пропущена. */
+    private void ensureScenesLoaded() {
+        if (allScenes == null || allScenes.isEmpty()) {
+            allScenes = SceneXmlParser.parseAllScenes();
+        }
     }
 
     public GameData getSaveData() {
@@ -96,281 +147,298 @@ public class GameEngine {
         return data;
     }
 
+    /**
+     * Восстанавливает состояние движка из данных сохранения и рендерит текущий кадр.
+     *
+     * @param data данные сохранения (null игнорируется)
+     */
     public void restoreState(GameData data) {
         if (data == null) return;
-        
-        this.currentSceneId = data.getCurrentSceneId();
-        this.currentFrameIndex = data.getCurrentFrameIndex();
-        
-        if (data.getHistory() != null) {
-            this.history = new ArrayList<>(data.getHistory());
-            this.historyIndex = this.history.size() - 1;
-        } else {
-            this.history.clear();
-            this.historyIndex = -1;
-        }
-        
-        if (data.getGameVariables() != null) {
-            this.gameVariables = new HashMap<>(data.getGameVariables());
-        }
-        if (data.getPlayerVariables() != null) {
-            this.playerVariables = new HashMap<>(data.getPlayerVariables());
-        }
-        if (data.getUiTheme() != null && !data.getUiTheme().isEmpty() && SceneInfo.getAppSettings() != null) {
-            SceneInfo.getAppSettings().setUiTheme(data.getUiTheme());
-        }
-        SceneInfo.loadChoiceList(data.getChoiceList());
 
-        // Sync delta tracking with restored state
-        this.lastSavedGameVars = new HashMap<>(this.gameVariables);
-        this.lastSavedChoices = SceneController.getPlayerChoicesSnapshot();
+        currentSceneId = data.getCurrentSceneId();
+        currentFrameIndex = data.getCurrentFrameIndex();
+        waitingForChoice = false;
+        isFinished = false;
+        lastDisplayed = null;
 
-        System.out.println("Restoring Game: Scene=" + currentSceneId + ", Frame=" + currentFrameIndex + ", HistSize=" + history.size() + ", HistIndex=" + historyIndex);
-
-        // If save had no history, record at least the current frame (will store full snapshot since lastSaved* is fresh)
-        if (history.isEmpty()) {
-            this.lastSavedGameVars = null;
-            this.lastSavedChoices = null;
-            List<SceneFrame> frames = allScenes.get(currentSceneId);
-            if (frames != null && currentFrameIndex < frames.size()) {
-                recordHistoryStep(frames.get(currentFrameIndex));
-            }
-        }
-        
+        restoreHistory(data);
+        restoreVariables(data);
+        restoreUiState(data);
+        syncDeltaTracking();
+        ensureHistoryNotEmpty();
         renderCurrentFrameImmediate();
     }
 
-    private void loadSceneInternal(int sceneId, int frameIndex) {
-        this.currentSceneId = sceneId;
-        this.currentFrameIndex = frameIndex;
-        this.isFinished = false;
-        
-        List<SceneFrame> frames = allScenes.get(sceneId);
-        if (frames == null || frames.isEmpty()) {
-            System.err.println("Scene " + sceneId + " not found or empty.");
-            isFinished = true; // Or handle error
-            return;
-        }
-        
-        if (frameIndex >= frames.size()) {
-             System.err.println("Frame " + frameIndex + " out of bounds for scene " + sceneId);
-             return;
-        }
-
-        // Record initial step in history if history is empty
-        if (historyIndex == -1) {
-            recordHistoryStep(frames.get(frameIndex));
-        }
-
-        showFrameExtras(frames.get(frameIndex), this::renderCurrentFrameImmediate);
-    }
-
-    private Map<String, Object> lastSavedGameVars = null;
-    private Map<String, String> lastSavedChoices = null;
-
-    private void recordHistoryStep(SceneFrame frame) {
-        // If we are in the middle of history and change something, truncate future history
-        if (historyIndex < history.size() - 1) {
-             history.subList(historyIndex + 1, history.size()).clear();
-        }
-
-        // Only store snapshot if state changed since last save
-        Map<String, Object> varsSnapshot = null;
-        if (!gameVariables.equals(lastSavedGameVars)) {
-            varsSnapshot = new HashMap<>(gameVariables);
-            lastSavedGameVars = new HashMap<>(gameVariables);
-        }
-
-        Map<String, String> choicesNow = SceneController.getPlayerChoicesSnapshot();
-        Map<String, String> choicesSnapshot = null;
-        if (!choicesNow.equals(lastSavedChoices)) {
-            choicesSnapshot = choicesNow;
-            lastSavedChoices = new HashMap<>(choicesNow);
-        }
-
-        HistoryStep step = new HistoryStep(currentSceneId, currentFrameIndex, varsSnapshot, choicesSnapshot);
-        history.add(step);
-        historyIndex++;
-    }
-
-    public void next() {
-        if (isFinished) {
-            System.out.println("DEBUG: Next called but isFinished=true");
-            return;
-        }
-        if (waitingForChoice) {
-            System.out.println("DEBUG: Next blocked — waiting for player choice");
-            return;
-        }
-        
-        // 1. If we are traversing back-then-forward in history
-        if (historyIndex < history.size() - 1) {
-            historyIndex++;
-            System.out.println("DEBUG: Next (History) -> Index=" + historyIndex);
-            restoreStateFromHistory(history.get(historyIndex), true); // Animate? Maybe yes
-            return;
-        }
-
-        // 2. Normal progression
-        List<SceneFrame> currentFrames = allScenes.get(currentSceneId);
-        if (currentFrames == null) return;
-        
-        SceneFrame currentFrame = currentFrames.get(currentFrameIndex);
-        
-        if (currentFrameIndex < currentFrames.size() - 1) {
-            // Next frame in same scene
-            SceneFrame prevFrame = currentFrame;
-            currentFrameIndex++;
-            SceneFrame nextFrame = currentFrames.get(currentFrameIndex);
-            
-            System.out.println("DEBUG: Next (Frame) -> Scene " + currentSceneId + " Frame " + currentFrameIndex
-                    + " | chars in prev: " + prevFrame.getVisualState().getCharacters().entrySet().stream()
-                        .map(e -> e.getKey() + ":" + e.getValue().isVisible())
-                        .collect(java.util.stream.Collectors.joining(","))
-                    + " | chars in next: " + nextFrame.getVisualState().getCharacters().entrySet().stream()
-                        .map(e -> e.getKey() + ":" + e.getValue().isVisible())
-                        .collect(java.util.stream.Collectors.joining(",")));
-            recordHistoryStep(nextFrame);
-            SceneFrame nf = nextFrame;
-            SceneFrame pf = prevFrame;
-            showFrameExtras(nextFrame, () -> renderer.renderFrame(nf, pf, true));
-            
-            // Legacy sync
-            SceneInfo.setCliker(currentFrameIndex); 
-            
+    /**
+     * Восстанавливает список истории и позицию в нём.
+     *
+     * @param data данные сохранения
+     */
+    private void restoreHistory(GameData data) {
+        if (data.getHistory() != null) {
+            history = new ArrayList<>(data.getHistory());
+            historyIndex = history.size() - 1;
         } else {
-            // End of scene, check for next scene
-            int nextSceneId = currentFrame.getNextSceneId();
-            if (nextSceneId != -1 && allScenes.containsKey(nextSceneId)) {
-                // Transition to next scene
-                System.out.println("DEBUG: Next (Scene Transition) -> " + currentSceneId + " to " + nextSceneId);
-                currentSceneId = nextSceneId;
-                currentFrameIndex = 0;
-                SceneFrame nextSceneFirstFrame = allScenes.get(currentSceneId).get(0);
-
-                // Inherit background/music from previous scene if not set
-                inheritVisualState(nextSceneFirstFrame, currentFrame);
-
-                recordHistoryStep(nextSceneFirstFrame);
-                SceneFrame firstFrame = nextSceneFirstFrame;
-                showFrameExtras(nextSceneFirstFrame, () -> renderer.renderFrame(firstFrame, currentFrame, true));
-                
-                // Legacy sync (reset clicker for new scene? or keep global? usually reset)
-                SceneInfo.setCliker(currentFrameIndex); 
-            } else {
-                isFinished = true;
-                System.out.println("Game Finished or No Next Scene");
-            }
+            history.clear();
+            historyIndex = -1;
         }
     }
 
     /**
-     * Наследование визуального состояния при переходе между сценами.
-     * Фон и музыка: если не заданы — берём из предыдущей сцены.
-     * Персонажи: видимые в предыдущей сцене переносятся во ВСЕ кадры новой сцены,
-     * чтобы команды (removeFromScene и др.) корректно с ними работали.
+     * Восстанавливает игровые флаги и пользовательские переменные.
+     *
+     * @param data данные сохранения
      */
-    private void inheritVisualState(SceneFrame firstFrame, SceneFrame source) {
-        if (firstFrame == null || source == null) return;
-        VisualState sourceState = source.getVisualState();
-        if (sourceState == null) return;
-
-        // Собираем видимых персонажей из предыдущей сцены
-        Map<String, CharacterState> inheritedChars = new HashMap<>();
-        for (Map.Entry<String, CharacterState> entry : sourceState.getCharacters().entrySet()) {
-            if (entry.getValue().isVisible()) {
-                inheritedChars.put(entry.getKey(), entry.getValue().clone());
-            }
+    private void restoreVariables(GameData data) {
+        if (data.getGameVariables() != null) {
+            gameVariables = new HashMap<>(data.getGameVariables());
         }
-
-        System.out.println("INHERIT: Scene " + currentSceneId + " <- inherited chars: " + inheritedChars.keySet()
-                + ", bg=" + sourceState.getBackgroundPath() + ", music=" + sourceState.getMusicPath());
-
-        // Патчим все кадры новой сцены
-        List<SceneFrame> newSceneFrames = allScenes.get(currentSceneId);
-        if (newSceneFrames != null) {
-            for (int fi = 0; fi < newSceneFrames.size(); fi++) {
-                SceneFrame frame = newSceneFrames.get(fi);
-                VisualState vs = frame.getVisualState();
-                if (vs == null) continue;
-
-                // Фон
-                String bg = vs.getBackgroundPath();
-                if (bg == null || bg.isEmpty()) {
-                    vs.setBackgroundPath(sourceState.getBackgroundPath());
-                }
-
-                // Музыка
-                String music = vs.getMusicPath();
-                if (music == null || music.isEmpty()) {
-                    vs.setMusicPath(sourceState.getMusicPath());
-                }
-
-                // Персонажи: добавляем унаследованных как visible.
-                // Если кадр уже содержит этого персонажа (например, removeFromScene
-                // поставил visible=false), НЕ перезаписываем — команда сцены имеет приоритет.
-                // Если кадр НЕ содержит персонажа — добавляем как visible.
-                for (Map.Entry<String, CharacterState> entry : inheritedChars.entrySet()) {
-                    boolean alreadyHas = vs.getCharacters().containsKey(entry.getKey());
-                    if (!alreadyHas) {
-                        vs.updateCharacter(entry.getKey(), entry.getValue().clone());
-                        System.out.println("INHERIT: frame " + fi + " <- added " + entry.getKey() + " as VISIBLE");
-                    } else {
-                        CharacterState existing = vs.getCharacters().get(entry.getKey());
-                        System.out.println("INHERIT: frame " + fi + " already has " + entry.getKey()
-                                + " visible=" + existing.isVisible() + " pose=" + existing.getPose());
-                    }
-                }
-            }
+        if (data.getPlayerVariables() != null) {
+            playerVariables = new HashMap<>(data.getPlayerVariables());
         }
     }
 
-    public void back() {
-        if (historyIndex > 0) {
-            historyIndex--;
-            isFinished = false; // Reset finished state when going back
-            renderer.stopAllEffects();
-            System.out.println("DEBUG: Back -> Index=" + historyIndex);
-            restoreStateFromHistory(history.get(historyIndex), false);
+    /**
+     * Восстанавливает тему интерфейса и список сделанных выборов.
+     *
+     * @param data данные сохранения
+     */
+    private void restoreUiState(GameData data) {
+        if (data.getUiTheme() != null && !data.getUiTheme().isEmpty()
+                && SceneInfo.getAppSettings() != null) {
+            SceneInfo.getAppSettings().setUiTheme(data.getUiTheme());
+        }
+        SceneInfo.loadChoiceList(data.getChoiceList());
+    }
+
+    /** Синхронизирует дельта-трекинг и runtime-визуал с загруженной историей. */
+    private void syncDeltaTracking() {
+        lastSavedGameVars = new HashMap<>(gameVariables);
+        lastSavedChoices = SceneController.getPlayerChoicesSnapshot();
+        VisualState visual = findLastVisualSnapshot(historyIndex);
+        runtimeVisual = (visual != null) ? visual.clone() : null;
+        lastSavedVisual = (visual != null) ? visual.clone() : null;
+    }
+
+    /** Если сейв без истории — записывает полный снимок текущего кадра. */
+    private void ensureHistoryNotEmpty() {
+        if (!history.isEmpty()) return;
+        lastSavedGameVars = null;
+        lastSavedChoices = null;
+        lastSavedVisual = null;
+        recordHistoryStep();
+    }
+
+    /**
+     * Переход на сцену внутри игры — без очистки истории и переменных.
+     * Используется выборами, паззлами и переходом nextScene.
+     *
+     * @param sceneId id целевой сцены
+     */
+    public void jumpTo(int sceneId) {
+        waitingForChoice = false;
+
+        List<SceneFrame> frames = allScenes.get(sceneId);
+        if (frames == null || frames.isEmpty()) {
+            System.err.println("jumpTo: scene " + sceneId + " not found or empty");
+            isFinished = true;
+            return;
+        }
+
+        isFinished = false;
+        currentSceneId = sceneId;
+        currentFrameIndex = 0;
+
+        SceneFrame script = frames.get(0);
+        SceneFrame display = present(script);
+        recordHistoryStep();
+        showFrameExtras(script, () -> renderDisplay(display, lastDisplayed != null));
+    }
+
+    /**
+     * Готовит кадр к показу: объединяет script-визуал с текущим runtime-визуалом
+     * и обновляет runtimeVisual. Script-кадр не мутируется.
+     *
+     * @param script кадр из allScenes
+     * @return display-копия кадра с runtime-визуалом
+     */
+    private SceneFrame present(SceneFrame script) {
+        runtimeVisual = VisualState.merge(script.getVisualState(), runtimeVisual);
+        return script.withVisual(runtimeVisual);
+    }
+
+    /**
+     * Рендерит display-кадр, запоминает его как последний показанный
+     * и синхронизирует legacy-счётчик кадров.
+     *
+     * @param display кадр с runtime-визуалом
+     * @param animate анимировать ли переход от прошлого кадра
+     */
+    private void renderDisplay(SceneFrame display, boolean animate) {
+        renderer.renderFrame(display, animate ? lastDisplayed : null, animate);
+        lastDisplayed = display;
+        SceneInfo.setCliker(currentFrameIndex);
+    }
+
+    /**
+     * Записывает шаг истории с дельта-снимками изменившихся переменных,
+     * выборов и runtime-визуала (null — без изменений). Обрезает redo-хвост.
+     */
+    private void recordHistoryStep() {
+        if (historyIndex < history.size() - 1) {
+            history.subList(historyIndex + 1, history.size()).clear();
+        }
+        history.add(new HistoryStep(currentSceneId, currentFrameIndex,
+                snapshotGameVarsIfChanged(), snapshotChoicesIfChanged(), snapshotVisualIfChanged()));
+        historyIndex++;
+    }
+
+    /**
+     * @return снимок gameVariables, если они изменились с прошлого шага; иначе null
+     */
+    private Map<String, Object> snapshotGameVarsIfChanged() {
+        if (gameVariables.equals(lastSavedGameVars)) return null;
+        lastSavedGameVars = new HashMap<>(gameVariables);
+        return new HashMap<>(gameVariables);
+    }
+
+    /**
+     * @return снимок playerChoices, если они изменились с прошлого шага; иначе null
+     */
+    private Map<String, String> snapshotChoicesIfChanged() {
+        Map<String, String> now = SceneController.getPlayerChoicesSnapshot();
+        if (now.equals(lastSavedChoices)) return null;
+        lastSavedChoices = new HashMap<>(now);
+        return now;
+    }
+
+    /**
+     * @return клон runtime-визуала, если он изменился с прошлого шага; иначе null
+     */
+    private VisualState snapshotVisualIfChanged() {
+        if (runtimeVisual == null || runtimeVisual.equals(lastSavedVisual)) return null;
+        lastSavedVisual = runtimeVisual.clone();
+        return runtimeVisual.clone();
+    }
+
+    /**
+     * Продвигает диалог вперёд: по истории (redo), на следующий кадр
+     * или на следующую сцену. Блокируется активным паззлом и ожиданием выбора.
+     */
+    public void next() {
+        if (isFinished || SceneInfo.isPuzzleActive() || waitingForChoice) return;
+
+        if (historyIndex < history.size() - 1) {
+            historyIndex++;
+            restoreStateFromHistory(history.get(historyIndex), true);
+            return;
+        }
+
+        List<SceneFrame> frames = allScenes.get(currentSceneId);
+        if (frames == null) return;
+
+        if (currentFrameIndex < frames.size() - 1) {
+            advanceFrame(frames);
         } else {
-            System.out.println("DEBUG: Back ignored (Index=" + historyIndex + ")");
+            advanceScene(frames.get(currentFrameIndex));
         }
     }
 
-    private void restoreStateFromHistory(HistoryStep step, boolean animate) {
-        this.currentSceneId = step.getSceneId();
-        this.currentFrameIndex = step.getFrameIndex();
+    /**
+     * Показывает следующий кадр текущей сцены.
+     *
+     * @param frames кадры текущей сцены
+     */
+    private void advanceFrame(List<SceneFrame> frames) {
+        currentFrameIndex++;
+        SceneFrame script = frames.get(currentFrameIndex);
+        SceneFrame display = present(script);
+        recordHistoryStep();
+        showFrameExtras(script, () -> renderDisplay(display, true));
+    }
 
-        // Find last non-null snapshots walking back through history
+    /**
+     * Завершает сцену: переходит на nextSceneId или завершает игру.
+     *
+     * @param lastFrame последний кадр текущей сцены
+     */
+    private void advanceScene(SceneFrame lastFrame) {
+        int nextSceneId = lastFrame.getNextSceneId();
+        if (nextSceneId != -1 && allScenes.containsKey(nextSceneId)) {
+            jumpTo(nextSceneId);
+        } else {
+            isFinished = true;
+        }
+    }
+
+    /** Возвращается на шаг назад по истории. Блокируется активным паззлом. */
+    public void back() {
+        if (SceneInfo.isPuzzleActive()) return;
+        if (historyIndex <= 0) return;
+        historyIndex--;
+        isFinished = false;
+        renderer.stopAllEffects();
+        restoreStateFromHistory(history.get(historyIndex), false);
+    }
+
+    /**
+     * Восстанавливает состояние из шага истории (позицию, переменные, выборы,
+     * runtime-визуал — из ближайших непустых снимков) и рендерит кадр.
+     *
+     * @param step    шаг истории
+     * @param animate анимировать ли переход
+     */
+    private void restoreStateFromHistory(HistoryStep step, boolean animate) {
+        currentSceneId = step.getSceneId();
+        currentFrameIndex = step.getFrameIndex();
+        restoreSnapshotsFromHistory();
+
+        List<SceneFrame> frames = allScenes.get(currentSceneId);
+        if (frames == null || currentFrameIndex >= frames.size()) {
+            System.err.println("Error restoring history: Scene/Frame not found ("
+                    + currentSceneId + "/" + currentFrameIndex + ")");
+            return;
+        }
+        SceneFrame script = frames.get(currentFrameIndex);
+        renderDisplay(present(script), animate);
+        reopenChoicesIfPresent(script);
+    }
+
+    /**
+     * Пересоздаёт панель выбора после восстановления кадра (back/redo/загрузка):
+     * закрывает устаревшую панель и, если кадр содержит выбор, показывает её
+     * заново — иначе откат на choice-кадр позволил бы уйти мимо ветки.
+     *
+     * @param script восстановленный script-кадр
+     */
+    private void reopenChoicesIfPresent(SceneFrame script) {
+        closeActiveChoicePane();
+        waitingForChoice = false;
+        showChoicesIfPresent(script);
+    }
+
+    /** Закрывает открытую панель выбора, если она есть. */
+    private void closeActiveChoicePane() {
+        if (activeChoicePane == null) return;
+        AppSettings appSettings = SceneInfo.getAppSettings();
+        if (appSettings != null && appSettings.getRoot() != null) {
+            activeChoicePane.closeDialogButtonPane(appSettings.getRoot());
+        }
+        activeChoicePane = null;
+    }
+
+    /** Восстанавливает переменные, выборы и визуал из ближайших непустых снимков истории. */
+    private void restoreSnapshotsFromHistory() {
         Map<String, Object> vars = findLastGameVars(historyIndex);
         Map<String, String> choices = findLastPlayerChoices(historyIndex);
-
-        this.gameVariables = (vars != null) ? new HashMap<>(vars) : new HashMap<>();
-        this.lastSavedGameVars = new HashMap<>(this.gameVariables);
+        gameVariables = (vars != null) ? new HashMap<>(vars) : new HashMap<>();
+        lastSavedGameVars = new HashMap<>(gameVariables);
         SceneController.restorePlayerChoices(choices);
-        this.lastSavedChoices = (choices != null) ? new HashMap<>(choices) : new HashMap<>();
-        
-        // Render
-        List<SceneFrame> frames = allScenes.get(currentSceneId);
-        if (frames != null && currentFrameIndex < frames.size()) {
-             SceneFrame frame = frames.get(currentFrameIndex);
-             SceneFrame prevFrame = null;
-             
-             // Try to find previous frame from history to enable animation
-             if (animate && historyIndex > 0) {
-                 HistoryStep prevStep = history.get(historyIndex - 1);
-                 List<SceneFrame> prevFrames = allScenes.get(prevStep.getSceneId());
-                 if (prevFrames != null && prevStep.getFrameIndex() < prevFrames.size()) {
-                     prevFrame = prevFrames.get(prevStep.getFrameIndex());
-                 }
-             }
-             
-             renderer.renderFrame(frame, prevFrame, animate); 
-             
-             SceneInfo.setCliker(currentFrameIndex);
-        } else {
-            System.err.println("Error restoring history: Scene/Frame not found (" + currentSceneId + "/" + currentFrameIndex + ")");
-        }
+        lastSavedChoices = (choices != null) ? new HashMap<>(choices) : new HashMap<>();
+
+        VisualState visual = findLastVisualSnapshot(historyIndex);
+        runtimeVisual = (visual != null) ? visual.clone() : null;
+        lastSavedVisual = (visual != null) ? visual.clone() : null;
     }
 
     /** Walk back to find the last non-null gameVariables snapshot. */
@@ -391,12 +459,22 @@ public class GameEngine {
         return null;
     }
 
+    /** Walk back to find the last non-null visual snapshot. */
+    private VisualState findLastVisualSnapshot(int fromIndex) {
+        for (int i = fromIndex; i >= 0; i--) {
+            VisualState v = history.get(i).getVisualSnapshot();
+            if (v != null) return v;
+        }
+        return null;
+    }
+
+    /** Мгновенно (без анимации) рендерит текущий кадр с runtime-визуалом. */
     private void renderCurrentFrameImmediate() {
         List<SceneFrame> frames = allScenes.get(currentSceneId);
-        if (frames != null && currentFrameIndex < frames.size()) {
-            renderer.renderFrame(frames.get(currentFrameIndex), null, false);
-            SceneInfo.setCliker(currentFrameIndex);
-        }
+        if (frames == null || currentFrameIndex >= frames.size()) return;
+        SceneFrame script = frames.get(currentFrameIndex);
+        renderDisplay(present(script), false);
+        reopenChoicesIfPresent(script);
     }
     
     public void handleMouseClick(MouseEvent event) {
@@ -479,7 +557,21 @@ public class GameEngine {
     }
 
     /**
-     * Показывает панель выбора, если кадр содержит варианты.
+     * Обрабатывает выбор игрока: снимает блокировку диалога, записывает выбор
+     * и переходит на целевую сцену. Прогресс (история, переменные) сохраняется.
+     *
+     * @param option выбранный вариант (null игнорируется)
+     */
+    public void choose(ChoiceOption option) {
+        waitingForChoice = false;
+        activeChoicePane = null;
+        if (option == null || !isChoiceAvailable(option)) return;
+        SceneInfo.addChoice(option.getText());
+        jumpTo(option.getTargetSceneId());
+    }
+
+    /**
+     * Показывает панель выбора, если кадр содержит доступные варианты.
      * Блокирует next() до выбора игрока.
      *
      * @param frame текущий кадр
@@ -489,35 +581,42 @@ public class GameEngine {
 
         AppSettings appSettings = SceneInfo.getAppSettings();
         StackPane root = appSettings != null ? appSettings.getRoot() : null;
-        if (root == null || appSettings == null) return;
+        if (root == null) return;
+
+        List<ChoiceOption> available = frame.getChoices().stream()
+                .filter(this::isChoiceAvailable)
+                .toList();
+        if (available.isEmpty()) return;
 
         waitingForChoice = true;
-
-        List<ChoiceOption> options = frame.getChoices();
-        List<String> texts = new ArrayList<>();
-        List<Integer> sceneIds = new ArrayList<>();
-        List<Boolean> trust = new ArrayList<>();
-
-        for (ChoiceOption opt : options) {
-            texts.add(opt.getText());
-            sceneIds.add(opt.getTargetSceneId());
-            trust.add(isChoiceAvailable(opt));
-        }
-
         DialogChoicesController choicePane = new DialogChoicesController(appSettings);
-        choicePane.createButtons(texts, sceneIds, trust, appSettings);
+        choicePane.createButtons(available, this::choose);
         choicePane.showDialogButtonPane(root);
+        activeChoicePane = choicePane;
     }
 
     /**
-     * Проверяет доступность варианта выбора по условиям репутации и флагов.
+     * Проверяет доступность варианта выбора: условия addChoice/removeChoice
+     * и диапазон репутации персонажа (characterChoice + minRep/maxRep).
      *
      * @param opt вариант выбора
      * @return true — вариант доступен
      */
     private boolean isChoiceAvailable(ChoiceOption opt) {
         if (!matchesChoiceConditions(opt.getAddChoice(), opt.getRemoveChoice())) return false;
-        return true;
+        return matchesReputationCondition(opt);
+    }
+
+    /**
+     * Проверяет условие репутации варианта выбора.
+     *
+     * @param opt вариант выбора
+     * @return true — условие не задано или репутация в диапазоне [minRep, maxRep]
+     */
+    private boolean matchesReputationCondition(ChoiceOption opt) {
+        if (opt.getCharacterChoice().isEmpty()) return true;
+        int rep = SceneController.getCharacterReputation(opt.getCharacterChoice());
+        return rep >= opt.getMinRep() && rep <= opt.getMaxRep();
     }
 
     /**
@@ -621,9 +720,11 @@ public class GameEngine {
         }
 
         SceneInfo.setActivePuzzle(panel);
+        setDialogNavigationEnabled(false);
         final PuzzleCommand finalCmd = cmd;
         panel.setOnComplete(result -> {
             SceneInfo.setActivePuzzle(null);
+            setDialogNavigationEnabled(true);
             root.getChildren().remove(panel);
             SceneInfo.enableEventHandler(root);
 
@@ -642,7 +743,7 @@ public class GameEngine {
 
             int targetScene = result.isSuccess() ? finalCmd.getOnSuccess() : finalCmd.getOnFailure();
             if (targetScene > 0) {
-                loadSceneInternal(targetScene, 0);
+                jumpTo(targetScene);
             } else if (onComplete != null) {
                 onComplete.run();
             }
@@ -651,6 +752,19 @@ public class GameEngine {
         root.getChildren().add(panel);
         StackPane.setAlignment(panel, Pos.CENTER);
         panel.toFront();
+    }
+
+    /**
+     * Включает или выключает кнопки навигации диалога (вперёд/назад)
+     * на время активной мини-игры.
+     *
+     * @param enabled true — навигация доступна
+     */
+    private void setDialogNavigationEnabled(boolean enabled) {
+        DialogPanel dialog = SceneInfo.getTableDatail();
+        if (dialog != null) {
+            dialog.setNavigationEnabled(enabled);
+        }
     }
 
     /** Вызов из кнопки меню (без onComplete). */

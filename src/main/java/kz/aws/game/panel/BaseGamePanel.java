@@ -2,6 +2,9 @@ package kz.aws.game.panel;
 
 import java.util.function.Consumer;
 
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
 import kz.aws.game.appsettings.AppSettings;
 
@@ -42,8 +45,10 @@ public abstract class BaseGamePanel extends StackPane {
     private PanelContext context;
 
     /**
-     * Инициализирует панель: задаёт размеры из аннотации и вызывает {@link #initialize()}.
-     * Вызывается системой автоматически перед показом.
+     * Инициализирует панель: задаёт размеры из аннотации, вызывает
+     * {@link #initialize()} и добавляет кнопку «Пропустить» (если панель
+     * помечена как {@code skippable}). Вызывается системой автоматически
+     * перед показом.
      */
     public final void init(PanelContext context) {
         this.context = context;
@@ -55,6 +60,24 @@ public abstract class BaseGamePanel extends StackPane {
             setMaxSize(w, h);
         }
         initialize();
+        addSkipButton(annotation);
+    }
+
+    /**
+     * Добавляет кнопку «Пропустить» в правый верхний угол панели.
+     * Нажатие закрывает мини-игру с результатом «провал» — так же,
+     * как выход по Esc.
+     *
+     * @param annotation аннотация панели (null — кнопка не добавляется)
+     */
+    private void addSkipButton(GamePanel annotation) {
+        if (annotation == null || !annotation.skippable()) return;
+        Button skipButton = new Button("Пропустить");
+        skipButton.getStyleClass().add("game-button");
+        skipButton.setOnAction(e -> forceFailure());
+        StackPane.setAlignment(skipButton, Pos.TOP_RIGHT);
+        StackPane.setMargin(skipButton, new Insets(10));
+        getChildren().add(skipButton);
     }
 
     /**

@@ -4,6 +4,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Один кадр диалога: говорящий, текст, визуальное состояние,
+ * улики, варианты выбора и команды кадра.
+ */
 public class SceneFrame implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -72,6 +76,30 @@ public class SceneFrame implements Serializable {
 
     public String getSwitchToTheme() { return switchToTheme; }
     public void setSwitchToTheme(String switchToTheme) { this.switchToTheme = switchToTheme; }
+
+    /**
+     * Копия кадра с другим VisualState — display-кадр для рендера.
+     * Списки (clues, choices, entryAnimations) шарятся с оригиналом:
+     * они принадлежат script-слою и не мутируются.
+     *
+     * @param visual runtime-визуал для копии
+     * @return копия кадра с заданным визуалом
+     */
+    public SceneFrame withVisual(VisualState visual) {
+        SceneFrame copy = new SceneFrame(speakerName, text, visual);
+        copy.speakerColor = speakerColor;
+        copy.textStyle = textStyle;
+        copy.voicePath = voicePath;
+        copy.overlayText = overlayText;
+        copy.inputRequestKey = inputRequestKey;
+        copy.inputRequestPrompt = inputRequestPrompt;
+        copy.switchToTheme = switchToTheme;
+        copy.clues = clues;
+        copy.choices = choices;
+        copy.entryAnimations = entryAnimations;
+        copy.nextSceneId = nextSceneId;
+        return copy;
+    }
 
     public List<ClueData> getClues() { return clues; }
     public void setClues(List<ClueData> clues) { this.clues = clues; }
