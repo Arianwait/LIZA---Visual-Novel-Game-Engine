@@ -53,6 +53,8 @@ public class GameEngine {
     private VisualState runtimeVisual;
     /** Последний отображённый display-кадр — prev для анимации перехода. */
     private SceneFrame lastDisplayed;
+    /** Открытая панель выбора; null — панель не показана. */
+    private DialogChoicesController activeChoicePane;
 
     // Дельта-трекинг истории: снимки пишутся только при изменении
     private Map<String, Object> lastSavedGameVars = null;
@@ -68,6 +70,19 @@ public class GameEngine {
         this.renderer = new SceneRenderer(root, tableDetail);
         this.history = new ArrayList<>();
         this.allScenes = new HashMap<>();
+    }
+
+    /**
+     * Конструктор для тестов: позволяет подменить рендерер и набор сцен
+     * без парсинга XML и создания JavaFX-иерархии.
+     *
+     * @param renderer стаб рендерера
+     * @param scenes   готовый набор сцен
+     */
+    GameEngine(SceneRenderer renderer, Map<Integer, List<SceneFrame>> scenes) {
+        this.renderer = renderer;
+        this.history = new ArrayList<>();
+        this.allScenes = scenes;
     }
     
     public void updateView(StackPane root, DialogPanel tableDetail) {
@@ -384,7 +399,32 @@ public class GameEngine {
                     + currentSceneId + "/" + currentFrameIndex + ")");
             return;
         }
-        renderDisplay(present(frames.get(currentFrameIndex)), animate);
+        SceneFrame script = frames.get(currentFrameIndex);
+        renderDisplay(present(script), animate);
+        reopenChoicesIfPresent(script);
+    }
+
+    /**
+     * Пересоздаёт панель выбора после восстановления кадра (back/redo/загрузка):
+     * закрывает устаревшую панель и, если кадр содержит выбор, показывает её
+     * заново — иначе откат на choice-кадр позволил бы уйти мимо ветки.
+     *
+     * @param script восстановленный script-кадр
+     */
+    private void reopenChoicesIfPresent(SceneFrame script) {
+        closeActiveChoicePane();
+        waitingForChoice = false;
+        showChoicesIfPresent(script);
+    }
+
+    /** Закрывает открытую панель выбора, если она есть. */
+    private void closeActiveChoicePane() {
+        if (activeChoicePane == null) return;
+        AppSettings appSettings = SceneInfo.getAppSettings();
+        if (appSettings != null && appSettings.getRoot() != null) {
+            activeChoicePane.closeDialogButtonPane(appSettings.getRoot());
+        }
+        activeChoicePane = null;
     }
 
     /** Восстанавливает переменные, выборы и визуал из ближайших непустых снимков истории. */
@@ -432,7 +472,9 @@ public class GameEngine {
     private void renderCurrentFrameImmediate() {
         List<SceneFrame> frames = allScenes.get(currentSceneId);
         if (frames == null || currentFrameIndex >= frames.size()) return;
-        renderDisplay(present(frames.get(currentFrameIndex)), false);
+        SceneFrame script = frames.get(currentFrameIndex);
+        renderDisplay(present(script), false);
+        reopenChoicesIfPresent(script);
     }
     
     public void handleMouseClick(MouseEvent event) {
@@ -522,6 +564,7 @@ public class GameEngine {
      */
     public void choose(ChoiceOption option) {
         waitingForChoice = false;
+        activeChoicePane = null;
         if (option == null || !isChoiceAvailable(option)) return;
         SceneInfo.addChoice(option.getText());
         jumpTo(option.getTargetSceneId());
@@ -549,6 +592,7 @@ public class GameEngine {
         DialogChoicesController choicePane = new DialogChoicesController(appSettings);
         choicePane.createButtons(available, this::choose);
         choicePane.showDialogButtonPane(root);
+        activeChoicePane = choicePane;
     }
 
     /**

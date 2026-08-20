@@ -14,7 +14,6 @@ import javafx.scene.layout.VBox;
 import kz.aws.game.animation.ButtonAnimation;
 import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.engine.model.ChoiceOption;
-import kz.aws.game.scenelist.SceneBuilder;
 import kz.aws.game.scenelist.SceneInfo;
 import kz.aws.game.utils.SceneSettingsParser;
 import kz.aws.game.utils.SceneSettingsParser.SceneSettings;
@@ -81,32 +80,6 @@ public class DialogChoicesController extends StackPane {
     }
 
     /**
-     * Создаёт кнопки выбора для legacy-пути (SceneController.startScene).
-     *
-     * @param options     тексты вариантов
-     * @param requestID   id сцен для перехода
-     * @param trustButton видимость кнопок (false — заблокирована условием)
-     * @param appSettings настройки приложения
-     * @deprecated используется только мёртвым legacy-путём; новый путь —
-     *             {@link #createButtons(List, Consumer)}
-     */
-    @Deprecated
-    public void createButtons(List<String> options, List<Integer> requestID,
-                               List<Boolean> trustButton, AppSettings appSettings) {
-        buttonsContainer.getChildren().clear();
-        buttonsContainer.setSpacing(settings.choicesSpacing);
-        buttonsContainer.setAlignment(Pos.CENTER);
-
-        for (int i = 0; i < options.size(); i++) {
-            if (!trustButton.get(i)) continue;
-            Button btn = createChoiceButton(options.get(i), requestID.get(i));
-            buttonsContainer.getChildren().add(btn);
-        }
-
-        bindLayout();
-    }
-
-    /**
      * Создаёт одну кнопку выбора: при клике закрывает панель
      * и передаёт вариант обработчику.
      *
@@ -119,24 +92,6 @@ public class DialogChoicesController extends StackPane {
         button.setOnAction(event -> {
             closeDialogButtonPane(appSettings.getRoot());
             onChoose.accept(option);
-        });
-        return button;
-    }
-
-    /**
-     * Создаёт одну кнопку выбора legacy-пути с переходом через SceneBuilder.
-     *
-     * @param text    текст варианта
-     * @param sceneId id сцены для перехода
-     * @return настроенная кнопка
-     * @deprecated используется только мёртвым legacy-путём
-     */
-    @Deprecated
-    private Button createChoiceButton(String text, int sceneId) {
-        Button button = styledChoiceButton(text);
-        button.setOnAction(event -> {
-            SceneInfo.addChoice(text);
-            new SceneBuilder(appSettings, null, sceneId);
         });
         return button;
     }

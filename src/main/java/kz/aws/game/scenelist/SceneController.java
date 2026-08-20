@@ -1,6 +1,5 @@
 package kz.aws.game.scenelist;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,13 +11,11 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import kz.aws.game.appsettings.AppSettings;
 import kz.aws.game.character.ICharacter;
-import kz.aws.game.fileutils.ListParser;
-import kz.aws.game.scenedetails.DialogChoicesController;
 import kz.aws.game.scenedetails.DialogPanel;
 
 /**
- * Контроллер отображения одного кадра диалоговой сцены: имя, текст, варианты выбора,
- * команды. Также хранит глобальное состояние игры: флаги, репутацию и выборы игрока.
+ * Контроллер отображения одного кадра диалоговой сцены (legacy-путь: имя, текст,
+ * команды). Также хранит глобальное состояние игры: флаги, репутацию и выборы игрока.
  */
 public class SceneController {
 
@@ -47,7 +44,6 @@ public class SceneController {
 		String player = System.getProperty("user.name");
 
 		displayDialogText(tableDatail, characterElement, player);
-		processChoices(characterElement, appSettings, ICharacterList, root);
 		executeCommands(characterElement, appSettings, root, ICharacterList, primaryStage, tableDatail);
 	}
 
@@ -81,74 +77,6 @@ public class SceneController {
 			return text.replace("[player]", player);
 		}
 		return text;
-	}
-
-	/**
-	 * Обрабатывает элемент choice: парсит опции и показывает панель выбора.
-	 *
-	 * @param characterElement XML-элемент персонажа
-	 * @param appSettings      настройки
-	 * @param ICharacterList   список персонажей
-	 * @param root             корневой StackPane
-	 */
-	private void processChoices(Element characterElement, AppSettings appSettings,
-			List<ICharacter> ICharacterList, StackPane root) {
-		Element choiceElement = (Element) characterElement.getElementsByTagName("choice").item(0);
-		if (choiceElement == null) return;
-
-		NodeList optionList = choiceElement.getElementsByTagName("option");
-		List<String> options = new ArrayList<>();
-		List<Boolean> trust = new ArrayList<>();
-		List<Integer> requestIds = new ArrayList<>();
-
-		for (int k = 0; k < optionList.getLength(); k++) {
-			parseOption((Element) optionList.item(k), options, requestIds, trust, ICharacterList);
-		}
-
-		DialogChoicesController buttonPane = new DialogChoicesController(appSettings);
-		buttonPane.createButtons(options, requestIds, trust, appSettings);
-		buttonPane.showDialogButtonPane(root);
-	}
-
-	/**
-	 * Парсит одну опцию выбора из XML и добавляет данные в списки.
-	 *
-	 * @param optionElement XML-элемент option
-	 * @param options       список текстов опций
-	 * @param requestIds    список id сцен для перехода
-	 * @param trust         список доступности опций
-	 * @param ICharacterList список персонажей
-	 */
-	private void parseOption(Element optionElement, List<String> options,
-			List<Integer> requestIds, List<Boolean> trust, List<ICharacter> ICharacterList) {
-		requestIds.add(Integer.parseInt(optionElement.getAttribute("requestsID")));
-		options.add(optionElement.getAttribute("text"));
-
-		String choiceWriteTrue = optionElement.getAttribute("addChoice");
-		String choiceWriteFalse = optionElement.getAttribute("removeChoice");
-		ICharacter character = findCharacterForChoice(optionElement, ICharacterList);
-		int minRep = parseOrDefault("minRep", 0, optionElement);
-		int maxRep = parseOrDefault("maxRep", 100, optionElement);
-
-		trust.add(choiceHandler(choiceWriteTrue, choiceWriteFalse, character, minRep, maxRep));
-	}
-
-	/**
-	 * Ищет персонажа по атрибуту CharacterChoice в списке.
-	 *
-	 * @param optionElement  XML-элемент option
-	 * @param ICharacterList список персонажей
-	 * @return найденный персонаж или null
-	 */
-	private ICharacter findCharacterForChoice(Element optionElement, List<ICharacter> ICharacterList) {
-		String characterChoice = optionElement.getAttribute("CharacterChoice");
-		if (characterChoice == null || characterChoice.isEmpty()) return null;
-
-		int personId = ListParser.findIdInList(characterChoice, ICharacterList);
-		if (personId >= 0 && personId < ICharacterList.size()) {
-			return ICharacterList.get(personId);
-		}
-		return null;
 	}
 
 	/**
@@ -211,70 +139,6 @@ public class SceneController {
 			return target + ":" + action + (hasValue ? ":" + value : "");
 		}
 		return action + (hasValue ? ":" + value : "");
-	}
-
-	/**
-	 * Определяет доступность варианта выбора по условиям (choices + reputation).
-	 *
-	 * @param choiceWriteTrue  требуемые выборы (через ;)
-	 * @param choiceWriteFalse запрещённые выборы (через ;)
-	 * @param iCharacter       персонаж для проверки репутации (может быть null)
-	 * @param minRep           минимальная репутация
-	 * @param maxRep           максимальная репутация
-	 * @return true — вариант доступен
-	 */
-	private boolean choiceHandler(String choiceWriteTrue, String choiceWriteFalse,
-			ICharacter iCharacter, int minRep, int maxRep) {
-		if (!matchesRequiredChoices(choiceWriteTrue, choiceWriteFalse)) return false;
-		if (isReputationOutOfRange(iCharacter, minRep, maxRep)) return false;
-		return true;
-	}
-
-	/**
-	 * Проверяет, находится ли репутация персонажа вне допустимого диапазона.
-	 *
-	 * @param iCharacter персонаж (null — пропуск проверки)
-	 * @param minRep     минимальная репутация
-	 * @param maxRep     максимальная репутация
-	 * @return true — репутация вне диапазона (вариант недоступен)
-	 */
-	private boolean isReputationOutOfRange(ICharacter iCharacter, int minRep, int maxRep) {
-		if (iCharacter == null) return false;
-		int rep = iCharacter.getReputathion();
-		return rep < minRep || rep > maxRep;
-	}
-
-	/**
-	 * Проверяет соответствие текущих выборов игрока требованиям опции.
-	 *
-	 * @param requiredChoices  требуемые выборы (через ;)
-	 * @param forbiddenChoices запрещённые выборы (через ;)
-	 * @return true — все условия выполнены
-	 */
-	private boolean matchesRequiredChoices(String requiredChoices, String forbiddenChoices) {
-		for (String choice : requiredChoices.split(";")) {
-			if (choice != null && !choice.isEmpty() && !SceneInfo.containsChoice(choice)) {
-				return false;
-			}
-		}
-		for (String choice : forbiddenChoices.split(";")) {
-			if (choice != null && !choice.isEmpty() && SceneInfo.containsChoice(choice)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	private static int parseOrDefault(String value, int defaultValue, Element optionElement) {
-	    if (value == null || value.trim().isEmpty()) {
-	        return defaultValue;
-	    }
-	    try {
-	        return Integer.parseInt(optionElement.getAttribute(value));
-	    } catch (NumberFormatException e) {
-	        // Если строка содержит не-число — тоже возвращаем значение по умолчанию
-	        return defaultValue;
-	    }
 	}
 
 	// ========== НОВЫЕ МЕТОДЫ ДЛЯ УЛУЧШЕННОЙ СИСТЕМЫ ==========
