@@ -5,7 +5,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
@@ -128,22 +127,26 @@ public class SceneSettingsParser {
         }
     }
 
+    /**
+     * Возвращает текст вложенного тега.
+     *
+     * @param element родительский элемент
+     * @param tagName имя тега
+     * @return текст или null
+     */
     private static String getTagValue(Element element, String tagName) {
-        NodeList nodeList = element.getElementsByTagName(tagName);
-        if (nodeList.getLength() > 0) {
-            Node node = nodeList.item(0);
-            return node.getTextContent().trim();
-        }
-        return null;
+        return XmlConfigSupport.getTagValue(element, tagName);
     }
 
+    /**
+     * Разбирает дробное число со значением по умолчанию.
+     *
+     * @param value        строка значения
+     * @param defaultValue значение по умолчанию
+     * @return разобранное число или defaultValue
+     */
     private static double parseDouble(String value, double defaultValue) {
-        if (value == null || value.isEmpty()) return defaultValue;
-        try {
-            return Double.parseDouble(value);
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
+        return XmlConfigSupport.parseDouble(value, defaultValue);
     }
 
     public static SceneSettings getSettings() {

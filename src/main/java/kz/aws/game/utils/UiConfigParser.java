@@ -78,13 +78,17 @@ public class UiConfigParser {
         }
     }
 
+    /**
+     * Возвращает текст вложенного тега.
+     * Значение обрезается по краям — раньше здесь терялся trim,
+     * и пробелы в конфиге попадали в пути к ресурсам и стили.
+     *
+     * @param element родительский элемент
+     * @param tagName имя тега
+     * @return текст или null
+     */
     private static String getTagValue(Element element, String tagName) {
-        NodeList nodeList = element.getElementsByTagName(tagName);
-        if (nodeList.getLength() > 0) {
-            Node node = nodeList.item(0);
-            return node.getTextContent();
-        }
-        return null;
+        return XmlConfigSupport.getTagValue(element, tagName);
     }
 
     public static ButtonConfig getButtonConfig(String id) {

@@ -153,9 +153,12 @@
 							<headerType>gui</headerType>
 							<errTitle>Aws Game Error</errTitle>
 
+							<!-- minVersion обязан совпадать с maven.compiler.target:
+							     код скомпилирован под 21, на JRE 17 запуск падает
+							     с UnsupportedClassVersionError -->
 							<jre>
 								<path>jre</path>
-								<minVersion>17.0.0</minVersion>
+								<minVersion>${maven.compiler.target}.0.0</minVersion>
 								<bundledJre64Bit>true</bundledJre64Bit>
 								<jdkPreference>preferJre</jdkPreference>
 							</jre>
