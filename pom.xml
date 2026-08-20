@@ -61,6 +61,14 @@
 			<artifactId>slf4j-simple</artifactId>
 			<version>1.7.36</version>
 		</dependency>
+
+		<!-- JUnit 5: тесты модели движка (script-слой, merge визуала) -->
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>5.10.2</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -74,6 +82,13 @@
 					<source>${maven.compiler.source}</source>
 					<target>${maven.compiler.target}</target>
 				</configuration>
+			</plugin>
+
+			<!-- Surefire 3.x: запуск JUnit 5 тестов (goal: test) -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.2.5</version>
 			</plugin>
 
 			<!-- Плагин JavaFX для запуска из Maven/Eclipse (goal: javafx:run) -->

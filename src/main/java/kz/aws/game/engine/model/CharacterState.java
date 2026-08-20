@@ -1,7 +1,11 @@
 package kz.aws.game.engine.model;
 
 import java.io.Serializable;
+import java.util.Objects;
 
+/**
+ * Состояние персонажа на сцене: поза, позиция и видимость.
+ */
 public class CharacterState implements Serializable, Cloneable {
     private static final long serialVersionUID = 1L;
 
@@ -49,6 +53,21 @@ public class CharacterState implements Serializable, Cloneable {
         }
     }
     
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CharacterState other)) return false;
+        return isVisible == other.isVisible
+                && Objects.equals(name, other.name)
+                && Objects.equals(pose, other.pose)
+                && position == other.position;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, pose, position, isVisible);
+    }
+
     @Override
     public String toString() {
         return "CharacterState{name='" + name + "', pose='" + pose + "', pos=" + position + ", visible=" + isVisible + "}";
