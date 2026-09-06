@@ -61,10 +61,7 @@ JSR-305 3.0.2                   BSD 3-Clause License
 3. Музыка
 ---------
 
-«Classic 1985 Movie Soundtrack» — Freedom Trail Studio
-«Palace of Roses» — Aakash Gandhi
-
-Композиции из фонотеки YouTube Audio Library.
+(раздел будет заполнен после подключения новых композиций)
 
 
 4. Изображения
