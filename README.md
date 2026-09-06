@@ -31,7 +31,7 @@ XML-файлах, а логика расширяется через аннота
 | Maven     | 3.8+   |
 | JavaFX    | 21.0.5 (тянется Maven'ом автоматически) |
 
-JavaFX, JSON (`json-simple`), `reflections` и `slf4j-simple` подключаются как
+JavaFX, JSON (`json-simple`), `reflections` и `slf4j` + `logback` подключаются как
 Maven-зависимости — отдельно ставить JavaFX SDK не нужно.
 
 ---
@@ -51,13 +51,22 @@ mvn clean javafx:run
 
 ```bash
 mvn clean package
-java -jar target/liza-engine-0.0.1-SNAPSHOT-jar-with-dependencies.jar
+java -jar target/liza-engine-1.0.0-jar-with-dependencies.jar
 ```
 
 ### Вариант 3. Готовый `.exe` (Windows)
 
 `mvn package` через **launch4j** дополнительно собирает `target/ProjectElein-launch4j.exe`
-(ожидает рядом JRE 17+ в папке `jre`).
+(ожидает рядом JRE 21+ в папке `jre`).
+
+### Вариант 4. Портативная сборка и установщик (jpackage)
+
+```bash
+mvn -Pjpackage clean package            # target/dist/ProjectElein/ — папка с exe и рантаймом
+mvn -Pinstaller clean package -DskipTests   # target/installer/ProjectElein-<версия>.exe (нужен WiX 3.x в PATH)
+```
+
+Установщик ставит игру в `%LOCALAPPDATA%\ProjectElein` без прав администратора и создаёт ярлыки.
 
 ---
 
@@ -165,7 +174,8 @@ public class MyEffectPlayer implements VisualEffectPlayer {
 
 ## Сохранения и история
 
-- Сейвы пишутся в папку `save/` (формат `.ser`, 6 слотов) — исключены из репозитория.
+- Сейвы пишутся в профиль пользователя: `%APPDATA%\ProjectElein\save` (формат `.ser`, 6 слотов);
+  логи — в `%APPDATA%\ProjectElein\logs`. Переопределение: `-Dliza.userdata=<папка>`, `-Dliza.logs=<папка>`.
 - `GameData` хранит текущую сцену/кадр, историю, переменные, выборы и тему интерфейса.
 - История ведётся в дельта-режиме: снимок состояния делается **только при изменении**,
   поэтому кнопка «Назад» работает на всю глубину при минимальном расходе памяти.
