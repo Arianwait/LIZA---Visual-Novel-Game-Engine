@@ -61,7 +61,13 @@ JSR-305 3.0.2                   BSD 3-Clause License
 3. Музыка
 ---------
 
-(раздел будет заполнен после подключения новых композиций)
+«Ambient Background (Soft Air Drift)» — Alex Morgan
+Music by Alex Morgan from Pixabay
+https://pixabay.com/users/alex-morgan-54692529/
+https://pixabay.com/music/id-575882/
+
+Используется на условиях Pixabay Content License: разрешено
+коммерческое использование, отчисления не требуются.
 
 
 4. Изображения
