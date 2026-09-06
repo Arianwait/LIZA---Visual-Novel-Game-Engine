@@ -191,6 +191,34 @@
 			<id>jpackage</id>
 			<build>
 				<plugins>
+					<!-- В payload попадает только толстый jar: раньше входной папкой
+					     jpackage была вся target, и в дистрибутив уезжали classes/,
+					     test-classes/ и прочий мусор сборки -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-resources-plugin</artifactId>
+						<version>3.3.1</version>
+						<executions>
+							<execution>
+								<id>prepare-jpackage-input</id>
+								<phase>package</phase>
+								<goals>
+									<goal>copy-resources</goal>
+								</goals>
+								<configuration>
+									<outputDirectory>${project.build.directory}/jpackage-input</outputDirectory>
+									<resources>
+										<resource>
+											<directory>${project.build.directory}</directory>
+											<includes>
+												<include>${project.artifactId}-${project.version}-jar-with-dependencies.jar</include>
+											</includes>
+										</resource>
+									</resources>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
 					<plugin>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>exec-maven-plugin</artifactId>
@@ -212,13 +240,15 @@
 										<argument>--app-version</argument>
 										<argument>1.0.0</argument>
 										<argument>--input</argument>
-										<argument>${project.build.directory}</argument>
+										<argument>${project.build.directory}/jpackage-input</argument>
 										<argument>--main-jar</argument>
 										<argument>${project.artifactId}-${project.version}-jar-with-dependencies.jar</argument>
 										<argument>--main-class</argument>
 										<argument>${main.class}</argument>
 										<argument>--dest</argument>
 										<argument>${project.build.directory}/dist</argument>
+										<argument>--app-content</argument>
+										<argument>${project.basedir}/dist-extras/THIRD-PARTY-NOTICES.txt</argument>
 										<argument>--java-options</argument>
 										<argument>--enable-native-access=javafx.media</argument>
 									</arguments>
