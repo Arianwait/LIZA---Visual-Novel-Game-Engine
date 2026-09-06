@@ -20,7 +20,7 @@
 		<!-- Имя дистрибутива (без пробелов: имя exe и папки) и отображаемое название -->
 		<app.name>ProjectElein</app.name>
 		<app.title>Project Elein</app.title>
-		<app.vendor>AWStudio</app.vendor>
+		<app.vendor>ArianwaitStudio</app.vendor>
 		<!-- Данные игры (сюжет), которые кладутся в установщик рядом с exe -->
 		<game.content>${project.basedir}/elein_test/lib</game.content>
 	</properties>
@@ -102,6 +102,13 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.2.5</version>
+				<configuration>
+					<!-- Тесты не должны писать в %APPDATA% реального пользователя -->
+					<systemPropertyVariables>
+						<liza.userdata>${project.build.directory}/test-userdata</liza.userdata>
+						<liza.logs>${project.build.directory}/test-logs</liza.logs>
+					</systemPropertyVariables>
+				</configuration>
 			</plugin>
 
 			<!-- Плагин JavaFX для запуска из Maven/Eclipse (goal: javafx:run) -->
@@ -158,13 +165,13 @@
 							<goal>launch4j</goal>
 						</goals>
 						<configuration>
-							<outfile>${project.build.directory}/AwsGame.exe</outfile>
+							<outfile>${project.build.directory}/ProjectElein-launch4j.exe</outfile>
 
 							<jar>
 								${project.build.directory}/${project.artifactId}-${project.version}-jar-with-dependencies.jar</jar>
 
 							<headerType>gui</headerType>
-							<errTitle>Aws Game Error</errTitle>
+							<errTitle>Project Elein Error</errTitle>
 
 							<!-- minVersion обязан совпадать с maven.compiler.target:
 							     код скомпилирован под 21, на JRE 17 запуск падает

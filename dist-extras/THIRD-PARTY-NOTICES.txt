@@ -86,4 +86,4 @@ https://pixabay.com/music/id-503983/
 5. Игра
 -------
 
-Project Elein © AWStudio. Движок LIZA (Visual Novel Game Engine).
+Project Elein © ArianwaitStudio. Движок LIZA (Visual Novel Game Engine).

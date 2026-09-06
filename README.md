@@ -56,7 +56,7 @@ java -jar target/kz.aws.game_main-0.0.1-SNAPSHOT-jar-with-dependencies.jar
 
 ### Вариант 3. Готовый `.exe` (Windows)
 
-`mvn package` через **launch4j** дополнительно собирает `target/AwsGame.exe`
+`mvn package` через **launch4j** дополнительно собирает `target/ProjectElein-launch4j.exe`
 (ожидает рядом JRE 17+ в папке `jre`).
 
 ---

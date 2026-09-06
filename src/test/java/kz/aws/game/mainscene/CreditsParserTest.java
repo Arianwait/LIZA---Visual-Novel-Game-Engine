@@ -18,7 +18,7 @@ class CreditsParserTest {
 
     @Test
     void firstNonEmptyLineIsTitle() {
-        List<Line> lines = CreditsParser.parse("\nLookQuest\nРазработчик: AWStudio");
+        List<Line> lines = CreditsParser.parse("\nLookQuest\nРазработчик: ArianwaitStudio");
         assertEquals(Kind.BLANK, lines.get(0).kind());
         assertEquals(Kind.TITLE, lines.get(1).kind());
         assertEquals("LookQuest", lines.get(1).text());

@@ -1,6 +1,6 @@
 LookQuest
 
-Разработчик: AWStudio
+Разработчик: ArianwaitStudio
 Дата версии: 16.03.2024
 Версия игры: 0.9
 
