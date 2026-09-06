@@ -24,6 +24,10 @@ public final class ResourceLocator {
     private static final String LIB_DIRECTORY = "lib";
     /** Системное свойство для явного указания корня игры. */
     private static final String ROOT_PROPERTY = "liza.home";
+    /** Системное свойство для явного указания папки данных пользователя (тесты, отладка). */
+    private static final String USER_DATA_PROPERTY = "liza.userdata";
+    /** Имя папки игры внутри профиля пользователя (%APPDATA%). */
+    private static final String USER_DATA_DIR_NAME = "ProjectElein";
 
     private static Path gameRoot;
 
@@ -103,6 +107,41 @@ public final class ResourceLocator {
         } catch (URISyntaxException | RuntimeException e) {
             return null;
         }
+    }
+
+    /**
+     * Папка изменяемых данных игры (сохранения, логи) в профиле пользователя:
+     * {@code %APPDATA%\ProjectElein\<sub>}. Папка рядом с exe после установки
+     * в Program Files недоступна для записи без прав администратора, поэтому
+     * всё, что игра пишет сама, живёт здесь. Папка создаётся при первом обращении.
+     *
+     * @param sub подпапка (например, {@code save} или {@code logs})
+     * @return абсолютный путь к подпапке
+     */
+    public static Path userData(String sub) {
+        Path base = userDataRoot().resolve(sub);
+        try {
+            Files.createDirectories(base);
+        } catch (java.io.IOException e) {
+            LOG.error("Не удалось создать папку данных " + base + ": " + e.getMessage());
+        }
+        return base;
+    }
+
+    /**
+     * Корень папки данных пользователя: свойство {@code liza.userdata},
+     * иначе {@code %APPDATA%}, иначе домашняя папка.
+     *
+     * @return путь к корню данных игры
+     */
+    private static Path userDataRoot() {
+        String configured = System.getProperty(USER_DATA_PROPERTY);
+        if (configured != null && !configured.isEmpty()) return Paths.get(configured);
+
+        String appData = System.getenv("APPDATA");
+        Path parent = (appData != null && !appData.isEmpty())
+                ? Paths.get(appData) : Paths.get(System.getProperty("user.home"));
+        return parent.resolve(USER_DATA_DIR_NAME);
     }
 
     /**

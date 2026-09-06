@@ -20,7 +20,7 @@ public final class SaveSlots {
      * @return true — найден хотя бы один файл сохранения
      */
     public static boolean hasAnySave() {
-        File directory = kz.aws.game.utils.ResourceLocator.file(SaveManager.SAVE_DIRECTORY);
+        File directory = SaveManager.getSaveDirectory();
         if (!directory.isDirectory()) return false;
 
         File[] files = directory.listFiles();

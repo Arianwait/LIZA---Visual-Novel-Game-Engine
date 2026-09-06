@@ -16,6 +16,13 @@
 
 		<javafx.version>21.0.5</javafx.version>
 		<main.class>kz.aws.game.dispatcher.GameDispatcher</main.class>
+
+		<!-- Имя дистрибутива (без пробелов: имя exe и папки) и отображаемое название -->
+		<app.name>ProjectElein</app.name>
+		<app.title>Project Elein</app.title>
+		<app.vendor>AWStudio</app.vendor>
+		<!-- Данные игры (сюжет), которые кладутся в установщик рядом с exe -->
+		<game.content>${project.basedir}/elein_test/lib</game.content>
 	</properties>
 
 	<dependencies>
@@ -184,8 +191,9 @@
 		  UnsupportedClassVersionError.
 
 		  Запуск:    mvn -Pjpackage clean package
-		  Результат: target/dist/Innagano/ (.exe + собственный рантайм)
-		  Папку lib/ с контентом нужно положить рядом с Innagano.exe.
+		  Результат: target/dist/ProjectElein/ (.exe + собственный рантайм)
+		  Папку lib/ с контентом нужно положить рядом с ProjectElein.exe
+		  (портативная сборка для zip). Установщик собирает профиль installer.
 		-->
 		<profile>
 			<id>jpackage</id>
@@ -236,9 +244,15 @@
 										<argument>--type</argument>
 										<argument>app-image</argument>
 										<argument>--name</argument>
-										<argument>Innagano</argument>
+										<argument>${app.name}</argument>
+										<argument>--description</argument>
+										<argument>${app.title}</argument>
+										<argument>--vendor</argument>
+										<argument>${app.vendor}</argument>
 										<argument>--app-version</argument>
-										<argument>1.0.0</argument>
+										<argument>${project.version}</argument>
+										<argument>--icon</argument>
+										<argument>${project.basedir}/dist-extras/ProjectElein.ico</argument>
 										<argument>--input</argument>
 										<argument>${project.build.directory}/jpackage-input</argument>
 										<argument>--main-jar</argument>
@@ -251,6 +265,102 @@
 										<argument>${project.basedir}/dist-extras/THIRD-PARTY-NOTICES.txt</argument>
 										<argument>--java-options</argument>
 										<argument>--enable-native-access=javafx.media</argument>
+									</arguments>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<!--
+		  Установщик Windows: mvn -Pinstaller clean package -DskipTests
+		  Результат: target/installer/ProjectElein-<version>.exe
+		  Нужен WiX Toolset 3.x в PATH (jpackage собирает exe/msi через него).
+		  Установка в профиль пользователя (без прав администратора), ярлыки
+		  в меню «Пуск» и на рабочем столе, выбор папки. Данные игры (lib/)
+		  и уведомления о лицензиях попадают внутрь.
+		-->
+		<profile>
+			<id>installer</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-resources-plugin</artifactId>
+						<version>3.3.1</version>
+						<executions>
+							<execution>
+								<id>prepare-jpackage-input</id>
+								<phase>package</phase>
+								<goals>
+									<goal>copy-resources</goal>
+								</goals>
+								<configuration>
+									<outputDirectory>${project.build.directory}/jpackage-input</outputDirectory>
+									<resources>
+										<resource>
+											<directory>${project.build.directory}</directory>
+											<includes>
+												<include>${project.artifactId}-${project.version}-jar-with-dependencies.jar</include>
+											</includes>
+										</resource>
+									</resources>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<version>3.2.0</version>
+						<executions>
+							<execution>
+								<id>build-installer</id>
+								<phase>package</phase>
+								<goals>
+									<goal>exec</goal>
+								</goals>
+								<configuration>
+									<executable>${java.home}/bin/jpackage</executable>
+									<arguments>
+										<argument>--type</argument>
+										<argument>exe</argument>
+										<argument>--name</argument>
+										<argument>${app.name}</argument>
+										<argument>--description</argument>
+										<argument>${app.title}</argument>
+										<argument>--vendor</argument>
+										<argument>${app.vendor}</argument>
+										<argument>--app-version</argument>
+										<argument>${project.version}</argument>
+										<argument>--icon</argument>
+										<argument>${project.basedir}/dist-extras/ProjectElein.ico</argument>
+										<argument>--input</argument>
+										<argument>${project.build.directory}/jpackage-input</argument>
+										<argument>--main-jar</argument>
+										<argument>${project.artifactId}-${project.version}-jar-with-dependencies.jar</argument>
+										<argument>--main-class</argument>
+										<argument>${main.class}</argument>
+										<argument>--dest</argument>
+										<argument>${project.build.directory}/installer</argument>
+										<argument>--app-content</argument>
+										<argument>${game.content},${project.basedir}/dist-extras/THIRD-PARTY-NOTICES.txt</argument>
+										<argument>--java-options</argument>
+										<argument>--enable-native-access=javafx.media</argument>
+										<argument>--win-per-user-install</argument>
+										<argument>--win-dir-chooser</argument>
+										<argument>--win-shortcut</argument>
+										<argument>--win-menu</argument>
+										<argument>--win-menu-group</argument>
+										<argument>${app.title}</argument>
+										<!-- Постоянный UUID: новые версии обновляют установленную, а не ставятся рядом -->
+										<argument>--win-upgrade-uuid</argument>
+										<argument>7c2b6e5a-9f41-4c3d-8a2e-5b1d0e7f3a91</argument>
+										<!-- Свой main.wxs с Codepage=1251: имена файлов сюжета кириллические -->
+										<argument>--resource-dir</argument>
+										<argument>${project.basedir}/dist-extras/wix</argument>
 									</arguments>
 								</configuration>
 							</execution>

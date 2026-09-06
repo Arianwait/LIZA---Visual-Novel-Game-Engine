@@ -43,7 +43,8 @@ public class SaveLoadPanelController extends VBox {
     private static final Logger LOG = LoggerFactory.getLogger(SaveLoadPanelController.class);
 
     private static final String FXML_PATH = "lib/fxml/save-load-panel.fxml";
-    private static final String SAVE_DIRECTORY = "save";
+    /** Папка сохранений в профиле пользователя (см. SaveManager). */
+    private static final String SAVE_DIRECTORY = SaveManager.getSaveDirectory().getPath();
     private static final int SLOT_COUNT = 6;
     private static final int SLIDE_DURATION_MS = 500;
 

@@ -8,6 +8,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import kz.aws.game.scenelist.GameData;
+import kz.aws.game.utils.ResourceLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +23,17 @@ public class SaveManager {
     public static final String SAVE_DIRECTORY = "save";
 
     /**
+     * Папка с файлами сохранений в профиле пользователя
+     * ({@code %APPDATA%\ProjectElein\save}). Создаётся при первом обращении.
+     * Рядом с exe после установки писать нельзя без прав администратора.
+     *
+     * @return абсолютный путь к папке сохранений
+     */
+    public static File getSaveDirectory() {
+        return ResourceLocator.userData(SAVE_DIRECTORY).toFile();
+    }
+
+    /**
      * Сохраняет состояние игры в файл внутри папки {@value #SAVE_DIRECTORY}.
      * Папка создаётся при необходимости.
      *
@@ -31,7 +43,7 @@ public class SaveManager {
      */
     public static boolean serializeClicker(GameData gameInfo, String fileName) {
         if (fileName == null) return false;
-        File file = new File(SAVE_DIRECTORY, fileName);
+        File file = new File(getSaveDirectory(), fileName);
         if (!ensureSaveDirectory(file)) return false;
 
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
@@ -67,7 +79,7 @@ public class SaveManager {
     public static GameData deserializeClicker(String fileName) {
         if (fileName == null) return null;
 
-        File file = new File(SAVE_DIRECTORY, fileName);
+        File file = new File(getSaveDirectory(), fileName);
         if (!file.isFile()) {
             LOG.error("Файл сохранения не найден: " + file);
             return null;

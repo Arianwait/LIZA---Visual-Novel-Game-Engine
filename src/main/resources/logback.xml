@@ -5,7 +5,8 @@
 -->
 <configuration>
 
-    <property name="LOG_DIR" value="${liza.logs:-logs}"/>
+    <!-- Логи в профиле пользователя: рядом с exe после установки писать нельзя -->
+    <property name="LOG_DIR" value="${liza.logs:-${APPDATA:-${user.home}}/ProjectElein/logs}"/>
     <property name="PATTERN" value="%d{HH:mm:ss.SSS} %-5level %logger{28} - %msg%n"/>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">

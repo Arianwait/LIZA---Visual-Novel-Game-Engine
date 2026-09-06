@@ -33,6 +33,20 @@ public class GameDispatcher extends Application implements Serializable {
 
 	/** Аргумент запуска: проверить сценарий и выйти, не открывая окно. */
 	private static final String VALIDATE_FLAG = "--validate";
+	/** Заголовок окна игры. */
+	private static final String GAME_TITLE = "Project Elein";
+	/** Иконка окна; если её нет в данных игры, берётся логотип движка. */
+	private static final String WINDOW_ICON = "lib/Logo/mainlogs.png";
+	private static final String FALLBACK_ICON = "lib/Logo/logo.png";
+
+	/**
+	 * Путь к иконке окна: своя иконка игры, если она есть, иначе логотип движка.
+	 *
+	 * @return относительный путь к PNG-иконке
+	 */
+	private static String windowIconPath() {
+		return java.nio.file.Files.exists(ResourceLocator.resolve(WINDOW_ICON)) ? WINDOW_ICON : FALLBACK_ICON;
+	}
 
 	/**
 	 * Точка входа. С аргументом {@value #VALIDATE_FLAG} проверяет сценарий
@@ -41,10 +55,6 @@ public class GameDispatcher extends Application implements Serializable {
 	 * @param args аргументы командной строки
 	 */
 	public static void main(String[] args) {
-		// логи кладём рядом с игрой, а не в случайную рабочую директорию
-		System.setProperty("liza.logs",
-				ResourceLocator.resolve("logs").toString());
-
 		if (args.length > 0 && VALIDATE_FLAG.equals(args[0])) {
 			System.exit(validateScenario());
 			return;
@@ -87,8 +97,8 @@ public class GameDispatcher extends Application implements Serializable {
 		// без ресурсов игра покажет чёрный экран — сообщаем причину сразу
 		ResourceLocator.exists("lib/Scene");
 
-		primaryStage.getIcons().add(new Image(ResourceLocator.url("lib/Logo/logo.png")));
-		primaryStage.setTitle("Innagano");
+		primaryStage.getIcons().add(new Image(ResourceLocator.url(windowIconPath())));
+		primaryStage.setTitle(GAME_TITLE);
 		primaryStage.setResizable(false);
 
 		AppSettings appSettings = JsonParser.readConfig();
