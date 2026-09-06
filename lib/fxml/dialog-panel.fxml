@@ -9,7 +9,7 @@
 <?import javafx.scene.image.ImageView?>
 
 <StackPane xmlns:fx="http://javafx.com/fxml"
-           fx:controller="kz.aws.game.scenedetails.DialogPanelController"
+           fx:controller="kz.arianwait.game.scenedetails.DialogPanelController"
            fx:id="rootPane"
            pickOnBounds="false">
 

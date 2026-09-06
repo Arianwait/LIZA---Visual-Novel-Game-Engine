@@ -1,0 +1,1 @@
+package kz.arianwait.game.animation;

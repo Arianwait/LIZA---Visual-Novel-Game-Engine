@@ -4,7 +4,7 @@
 XML-файлах, а логика расширяется через аннотации и автопоиск классов (Reflections) —
 новые команды, кнопки, панели и визуальные эффекты добавляются без правки ядра.
 
-> Игра запускается классом `kz.aws.game.dispatcher.GameDispatcher`, читает сцены из
+> Игра запускается классом `kz.arianwait.game.dispatcher.GameDispatcher`, читает сцены из
 > `lib/Scene/Dialog_Structured.xml` и ресурсы из папки `lib/`.
 
 ---
@@ -51,7 +51,7 @@ mvn clean javafx:run
 
 ```bash
 mvn clean package
-java -jar target/kz.aws.game_main-0.0.1-SNAPSHOT-jar-with-dependencies.jar
+java -jar target/liza-engine-0.0.1-SNAPSHOT-jar-with-dependencies.jar
 ```
 
 ### Вариант 3. Готовый `.exe` (Windows)
@@ -64,7 +64,7 @@ java -jar target/kz.aws.game_main-0.0.1-SNAPSHOT-jar-with-dependencies.jar
 ## Структура проекта
 
 ```
-kz.aws.game/
+kz.arianwait.game/
 ├── pom.xml                     — сборка (Maven + JavaFX + assembly + launch4j)
 ├── Scenario_Guide.md           — как писать сценарии (XML)
 ├── lib/                        — все игровые ресурсы и конфиги (НЕ в src!)
@@ -79,7 +79,7 @@ kz.aws.game/
 │       ├── style.css              — общие стили (кнопки, панели, темы)
 │       ├── dialog_styles.css      — стили текста диалогов
 │       └── UI/                    — Buttons.xml, MainMenu.xml, SceneSettings.xml …
-└── src/main/java/kz/aws/game/
+└── src/main/java/kz/arianwait/game/
     ├── dispatcher/             — GameDispatcher (точка входа, JavaFX Application)
     ├── engine/                 — ядро: GameEngine, parser, render, model, effect
     │   ├── parser/             — SceneXmlParser (XML → SceneFrame)
@@ -144,9 +144,9 @@ kz.aws.game/
 
 | Что добавляем | Аннотация | Пакет | Вызов из XML |
 |---------------|-----------|-------|--------------|
-| Кнопка | `@ButtonAction("id")` | `kz.aws.game.buttonaction` | `id` кнопки в `lib/config/UI/Buttons.xml` |
-| Панель / мини-игра | `@GamePanel(id=...)` | `kz.aws.game.panel` | `<command type="panel" id="..."/>` |
-| Визуальный эффект | `@VisualEffect("id")` | `kz.aws.game.engine.effect` | `<command type="effect" effect="id"/>` |
+| Кнопка | `@ButtonAction("id")` | `kz.arianwait.game.buttonaction` | `id` кнопки в `lib/config/UI/Buttons.xml` |
+| Панель / мини-игра | `@GamePanel(id=...)` | `kz.arianwait.game.panel` | `<command type="panel" id="..."/>` |
+| Визуальный эффект | `@VisualEffect("id")` | `kz.arianwait.game.engine.effect` | `<command type="effect" effect="id"/>` |
 
 Пример эффекта:
 

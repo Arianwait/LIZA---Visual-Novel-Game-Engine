@@ -1,1 +1,0 @@
-package kz.aws.game.animation;
