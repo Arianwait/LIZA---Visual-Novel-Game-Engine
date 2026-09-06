@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.VBox?>
+
+<fx:root type="VBox" xmlns:fx="http://javafx.com/fxml/1"
+         spacing="10">
+
+    <children>
+        <VBox fx:id="menuPanel" alignment="TOP_CENTER" spacing="12"
+              styleClass="hitech-panel">
+            <padding>
+                <Insets top="30" right="40" bottom="30" left="40"/>
+            </padding>
+            <children>
+                <Label fx:id="titleLabel" text="Кредиты"
+                       styleClass="hitech-panel-title"/>
+                <ScrollPane fx:id="scrollPane" fitToWidth="true"
+                            hbarPolicy="NEVER">
+                    <content>
+                        <VBox fx:id="contentBox">
+                            <padding>
+                                <Insets top="5" right="10" bottom="5" left="10"/>
+                            </padding>
+                        </VBox>
+                    </content>
+                </ScrollPane>
+                <!-- Кнопка «Назад» добавляется из кода -->
+            </children>
+        </VBox>
+    </children>
+</fx:root>

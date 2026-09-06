@@ -75,7 +75,20 @@ public class SettingsMenuController extends VBox {
         applyControlFontSizes();
         applyPanelMargins();
         createActionButtons();
+        createContextButtons("settings");
         createSubmenuButtons();
+    }
+
+    /**
+     * Создаёт кнопки из Buttons.xml по заданному контексту (например, «Кредиты»).
+     *
+     * @param context контекст кнопок в Buttons.xml
+     */
+    private void createContextButtons(String context) {
+        for (UiConfigParser.ButtonConfig btnCfg : UiConfigParser.getButtonsByContext(context)) {
+            Button btn = UiFactory.createButtonFromConfig(btnCfg, appSettings);
+            styleAndAddButton(btn);
+        }
     }
 
     /**
