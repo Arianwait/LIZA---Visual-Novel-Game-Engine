@@ -81,10 +81,12 @@ public final class ResourceLocator {
      */
     private static Path[] candidateRoots() {
         String configured = System.getProperty(ROOT_PROPERTY);
+        // папка рядом с jar/exe важнее рабочей директории: игру запускают
+        // ярлыком или из другого каталога, и cwd тогда указывает не туда
         return new Path[] {
             configured != null && !configured.isEmpty() ? Paths.get(configured) : null,
-            Paths.get("").toAbsolutePath(),
-            locateCodeDirectory()
+            locateCodeDirectory(),
+            Paths.get("").toAbsolutePath()
         };
     }
 
@@ -111,6 +113,37 @@ public final class ResourceLocator {
      */
     public static Path resolve(String relativePath) {
         return getGameRoot().resolve(relativePath);
+    }
+
+    /**
+     * Превращает путь ресурса из сценария в абсолютный {@code file:}-URL.
+     *
+     * <p>Пути в XML записаны относительно корня игры ({@code lib/Scene/...}),
+     * а JavaFX разрешал бы их относительно рабочей директории — из-за этого
+     * фон и музыка пропадали при запуске игры не из её папки.
+     * Абсолютные пути и готовые URL возвращаются как есть.
+     *
+     * @param path путь из сценария или конфига
+     * @return URL вида {@code file:/...} либо null, если путь пуст
+     */
+    public static String media(String path) {
+        if (path == null || path.isEmpty()) return null;
+
+        String normalized = path.replace("\\", "/");
+        if (normalized.startsWith("http:") || normalized.startsWith("https:")
+                || normalized.startsWith("jar:") || normalized.startsWith("file:/")) {
+            return normalized;
+        }
+        // "file:lib/..." из конфигов — это относительный путь с префиксом,
+        // а не абсолютный URL: снимаем префикс и разрешаем от корня игры
+        if (normalized.startsWith("file:")) {
+            normalized = normalized.substring("file:".length());
+        }
+        Path resolved = Paths.get(normalized);
+        if (!resolved.isAbsolute()) {
+            resolved = getGameRoot().resolve(normalized);
+        }
+        return resolved.toUri().toString();
     }
 
     /**

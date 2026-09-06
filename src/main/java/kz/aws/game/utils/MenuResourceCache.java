@@ -73,7 +73,7 @@ public class MenuResourceCache {
         
         try {
             // backgroundLoading = false потому что мы уже в фоне и хотим дождаться загрузки
-            Image image = new Image(path, 0, 0, true, true, false);
+            Image image = new Image(ResourceLocator.media(path), 0, 0, true, true, false);
             
             // Ждем загрузки (в фоновом потоке это безопасно)
             long startTime = System.currentTimeMillis();
@@ -114,7 +114,7 @@ public class MenuResourceCache {
         // Если нет в кеше, загружаем асинхронно (fallback)
         LOG.info("Warning: Image not in cache, loading async: " + path);
         try {
-            Image image = new Image(path, 0, 0, true, true, true);
+            Image image = new Image(ResourceLocator.media(path), 0, 0, true, true, true);
             imageCache.put(path, image);
             return image;
         } catch (Exception e) {

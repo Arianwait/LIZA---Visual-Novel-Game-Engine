@@ -31,6 +31,7 @@ import kz.aws.game.scenelist.SceneInfo;
 import kz.aws.game.soundtrack.Soundtrack;
 import kz.aws.game.soundtrack.SoundManager;
 import kz.aws.game.utils.ImageViewPool;
+import kz.aws.game.utils.ResourceLocator;
 import kz.aws.game.utils.VariableSubstitution;
 import kz.aws.game.utils.VirtualViewport;
 import org.slf4j.Logger;
@@ -573,8 +574,12 @@ public class SceneRenderer {
             CharacterState oldCharState = oldState.getCharacter(name);
             boolean wasVisible = oldCharState.isVisible();
             ImageView view = updateCharacterView(name, newCharState, !wasVisible);
+            if (view == null) continue;
 
             if (wasVisible && oldCharState.getPosition() != newCharState.getPosition()) {
+                animateCharacterMove(name, view, oldCharState, newCharState);
+            } else if (!wasVisible && oldCharState.getPosition().isOffScreen()) {
+                // персонаж был за краем экрана — вбегает оттуда, а не появляется плавно
                 animateCharacterMove(name, view, oldCharState, newCharState);
             } else if (!wasVisible) {
                 fadeInCharacter(name, view, newCharState);
@@ -673,11 +678,12 @@ public class SceneRenderer {
      * @return загруженный Image
      */
     private Image loadImage(String path) {
-        Image image = imageCache.get(path);
+        String resolved = ResourceLocator.media(path);
+        Image image = imageCache.get(resolved);
         if (image == null) {
             try {
-                image = new Image(path, 0, 0, true, true, true);
-                imageCache.put(path, image);
+                image = new Image(resolved, 0, 0, true, true, true);
+                imageCache.put(resolved, image);
             } catch (Exception e) {
                 LOG.error("Could not load image: " + path);
             }
@@ -692,8 +698,8 @@ public class SceneRenderer {
      */
     private void updateBackground(String path) {
         if (path == null) return;
-        String normalizedPath = path.replace("\\", "/");
-        String fullPath = normalizedPath.startsWith("file:") ? normalizedPath : "file:" + normalizedPath;
+        // путь из сценария разрешаем от корня игры, а не от рабочей директории
+        String fullPath = ResourceLocator.media(path);
 
         LOG.info("DEBUG: Loading background: " + fullPath);
 
@@ -780,6 +786,10 @@ public class SceneRenderer {
         return switch (position) {
             case LEFT -> -VirtualViewport.width(0.3);
             case RIGHT -> VirtualViewport.width(0.3);
+            // за краем экрана: персонаж полностью скрыт, но остаётся на сцене —
+            // может выбежать обратно
+            case OUT_LEFT -> -VirtualViewport.width(0.9);
+            case OUT_RIGHT -> VirtualViewport.width(0.9);
             default -> 0;
         };
     }

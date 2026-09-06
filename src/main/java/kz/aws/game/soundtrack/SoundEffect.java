@@ -7,6 +7,7 @@ import java.util.List;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import kz.aws.game.appsettings.AppSettings;
+import kz.aws.game.utils.ResourceLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,7 @@ public final class SoundEffect {
      * @return плеер, готовый к play(); null — если файл не найден или не читается
      */
     public static MediaPlayer startSound(AppSettings appSettings, String audioFilePath) {
-        File file = new File(audioFilePath);
+        File file = ResourceLocator.file(audioFilePath);
         if (!file.isFile()) {
             LOG.error("SoundEffect: файл не найден — " + audioFilePath);
             return null;

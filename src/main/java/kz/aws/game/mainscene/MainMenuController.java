@@ -96,11 +96,26 @@ public class MainMenuController extends VBox {
     }
 
     /**
+     * Проверяет условие показа кнопки из атрибута {@code visible-when}.
+     *
+     * @param condition имя условия из Buttons.xml
+     * @return true — условие выполнено и кнопку нужно показать
+     */
+    private static boolean isConditionMet(String condition) {
+        if ("hasSaveFiles".equals(condition)) {
+            return kz.aws.game.actionscenarios.SaveSlots.hasAnySave();
+        }
+        return true;
+    }
+
+    /**
      * Создаёт кнопки из Buttons.xml по контексту "main-menu" и добавляет в menuPanel.
      */
     private void createButtons() {
-        List<ButtonConfig> buttonConfigs =
-                kz.aws.game.utils.UiConfigParser.getButtonsByContext("main-menu");
+        // getButtonsForView учитывает visible-when: кнопка «Продолжить»
+        // скрывается, когда сохранений нет
+        List<ButtonConfig> buttonConfigs = kz.aws.game.utils.UiConfigParser
+                .getButtonsForView("main-menu", null, MainMenuController::isConditionMet);
         for (ButtonConfig btnCfg : buttonConfigs) {
             Button btn = UiFactory.createButtonFromConfig(btnCfg, appSettings);
             bindButtonSize(btn);

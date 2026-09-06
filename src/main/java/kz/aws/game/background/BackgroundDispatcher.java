@@ -8,6 +8,7 @@ import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
+import kz.aws.game.utils.ResourceLocator;
 
 public class BackgroundDispatcher implements SceneBackground, Serializable  {
 
@@ -22,13 +23,13 @@ public class BackgroundDispatcher implements SceneBackground, Serializable  {
         // Проверяем формат файла
         if (filePathNOTfile.toLowerCase().endsWith(".gif")) {
             // Если это GIF, берем первый кадр
-            Image gifImage = new Image(filePath, true); // true для асинхронной загрузки
+            Image gifImage = new Image(ResourceLocator.media(filePath), true); // true для асинхронной загрузки
             BackgroundSize backgroundSize = new BackgroundSize(1.0, 1.0, true, true, false, false);
             BackgroundImage backgroundImg = new BackgroundImage(gifImage, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.DEFAULT, backgroundSize);
             return new Background(backgroundImg);
         } else {
             // Для других форматов (например, PNG/JPG)
-            Image image = new Image(filePath);
+            Image image = new Image(ResourceLocator.media(filePath));
             BackgroundSize backgroundSize = new BackgroundSize(1.0, 1.0, true, true, false, false);
             BackgroundImage backgroundImg = new BackgroundImage(image, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.DEFAULT, backgroundSize);
             return new Background(backgroundImg);

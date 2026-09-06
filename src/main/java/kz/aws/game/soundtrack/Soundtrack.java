@@ -4,6 +4,7 @@ import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.util.Duration;
 import kz.aws.game.appsettings.AppSettings;
+import kz.aws.game.utils.ResourceLocator;
 
 import java.io.File;
 
@@ -19,7 +20,7 @@ public class Soundtrack {
             mediaPlayer.dispose();
         }
 
-        Media media = new Media(new File(audioFilePath).toURI().toString());
+        Media media = new Media(ResourceLocator.media(audioFilePath));
         mediaPlayer = new MediaPlayer(media);
         mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
 

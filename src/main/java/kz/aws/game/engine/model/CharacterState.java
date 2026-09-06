@@ -9,8 +9,22 @@ import java.util.Objects;
 public class CharacterState implements Serializable, Cloneable {
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Позиция персонажа на сцене.
+     * OUT_LEFT/OUT_RIGHT — за краем экрана: персонаж убегает туда
+     * (или выбегает оттуда) с анимацией движения.
+     */
     public enum Position {
-        LEFT, CENTER, RIGHT, OUT
+        LEFT, CENTER, RIGHT, OUT, OUT_LEFT, OUT_RIGHT;
+
+        /**
+         * Проверяет, находится ли позиция за пределами экрана.
+         *
+         * @return true — персонаж вне видимой области
+         */
+        public boolean isOffScreen() {
+            return this == OUT_LEFT || this == OUT_RIGHT;
+        }
     }
 
     private String name;

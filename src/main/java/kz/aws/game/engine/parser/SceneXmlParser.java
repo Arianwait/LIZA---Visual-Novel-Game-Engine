@@ -381,6 +381,8 @@ public class SceneXmlParser {
                      CharacterState charState = currentState.getCharacter(target);
                      charState.setPosition(Position.CENTER);
                      currentState.updateCharacter(target, charState);
+                 } else if (applyOffScreenAction(action, target, currentState)) {
+                     // персонаж убежал за край или выбежал из-за края
                  } else {
                      AnimationCommand stateCmd = createStateCommand(action, target, value);
                      if (stateCmd != null) anims.add(stateCmd);
@@ -389,6 +391,35 @@ public class SceneXmlParser {
         }
 
         return anims;
+    }
+
+    /**
+     * Обрабатывает команды выбегания за край экрана и появления из-за края.
+     *
+     * <p>{@code runToLeft}/{@code runToRight} — персонаж убегает за край:
+     * остаётся на сцене видимым, но уезжает за границу с анимацией.
+     * {@code setFromLeft}/{@code setFromRight} — персонаж ставится за краем,
+     * чтобы следующей командой движения выбежать на сцену.
+     *
+     * @param action имя действия
+     * @param target имя персонажа
+     * @param state  визуальное состояние кадра
+     * @return true — команда распознана и применена
+     */
+    private static boolean applyOffScreenAction(String action, String target, VisualState state) {
+        Position position = switch (action) {
+            case "runToLeft", "setFromLeft" -> Position.OUT_LEFT;
+            case "runToRight", "setFromRight" -> Position.OUT_RIGHT;
+            default -> null;
+        };
+        if (position == null) return false;
+
+        CharacterState charState = state.getCharacter(target);
+        charState.setPosition(position);
+        // остаётся видимым: иначе движок удалит его до конца анимации ухода
+        charState.setVisible(true);
+        state.updateCharacter(target, charState);
+        return true;
     }
 
     /**
@@ -488,6 +519,8 @@ public class SceneXmlParser {
         } else if ("move_Center".equals(action)) {
              CharacterState cs = state.getCharacter(target);
              cs.setPosition(Position.CENTER);
+        } else {
+             applyOffScreenAction(action, target, state);
         }
     }
 

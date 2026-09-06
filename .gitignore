@@ -68,3 +68,9 @@ doc/
 
 
 logs/
+
+# Локальные данные и сборки (сюжет не публикуется)
+elein_test/
+lib_current_backup/
+releases/
+kz.aws.game_main.exe
