@@ -5,7 +5,7 @@
 
 	<groupId>kz.aws.game_main</groupId>
 	<artifactId>kz.aws.game_main</artifactId>
-	<version>1.0.0-beta</version>
+	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
 	<properties>
